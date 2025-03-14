@@ -41,7 +41,7 @@ class LinePlot:
                          labels_data: np.ndarray | None = None,
                          dims: int | list[int] | None = None,
                          title: str | None = None) -> Figure:
-        """Plot multi-dimensional time series data with optional anomaly highlighting.
+        """Plot multidimensional time series data with optional anomaly highlighting.
 
         Args:
             y_data (np.ndarray): 2D array of time series data (samples x dimensions)
@@ -90,12 +90,31 @@ class LinePlot:
             raise ValueError('dims must be integer, list or None')
 
         # Create subplots
-        figure, axes = plt.subplots(len(dims_to_plot), 1, sharex=True)
-        plt.subplots_adjust(hspace=0.5)  # Adjust vertical spacing between subplots
-        if len(dims_to_plot) == 1:
+        num_dims = len(dims_to_plot)
+        # Calculate figure height based on number of dimensions
+        min_height_per_subplot = 2.0  # Minimum height for each subplot in inches
+        figure_height = max(num_dims * min_height_per_subplot, 6.0)  # Ensure minimum total height
+
+        # Create figure with calculated dimensions
+        figure, axes = plt.subplots(num_dims, 1,
+                                    figsize=(10, figure_height),  # Width fixed at 10 inches
+                                    sharex=True)
+
+        # Adjust subplot parameters for better spacing
+        plt.subplots_adjust(
+            top=0.90,  # Reduced top margin to leave space for main title
+            bottom=0.05,  # Bottom margin
+            hspace=0.4,  # Height space between subplots
+            left=0.1,  # Left margin
+            right=0.95  # Right margin
+        )
+
+        if num_dims == 1:
             axes = [axes]
 
-        figure.suptitle(title)
+        # Add title with adjusted position
+        if title:
+            figure.suptitle(title, y=0.98)  # Move title higher up
         for i, dim_index in enumerate(dims_to_plot):
             # Plot normal time series data
             x_values = x_data if x_data is not None else np.arange(L)
@@ -103,7 +122,13 @@ class LinePlot:
 
             # Highlight anomalies if labels are provided
             if labels_data is not None:
-                anomaly_indices = np.where(labels_data == 1)[0]
+                # Processing one-dimensional label data
+                if len(labels_data.shape) == 1:
+                    anomaly_indices = np.where(labels_data == 1)[0]
+                # Processing two-dimensional label data
+                else:
+                    anomaly_indices = np.where(labels_data[:, dim_index] == 1)[0]
+                
                 if len(anomaly_indices) > 0:
                     axes[i].plot(x_values[anomaly_indices], y_data[anomaly_indices, dim_index],
                                  'r.', markersize=2, label='Anomaly')

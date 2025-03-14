@@ -6,7 +6,19 @@
 ==================================================
 """
 from .mba import MBADataset
+from .msds import MSDSDataset
+from .msl_smap import MSLSMAPDataset
+from .nab import NABDataset
+from .smd import SMDDataset
+from .ucr import UCRDataset
+from .wadi import WADIDataset
 
 __all__ = [
-    'MBADataset'
+    'MBADataset',
+    'MSDSDataset',
+    'NABDataset',
+    'MSLSMAPDataset',
+    'SMDDataset',
+    'WADIDataset',
+    'UCRDataset'
 ]
