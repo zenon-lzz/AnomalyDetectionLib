@@ -15,9 +15,9 @@ from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
 from tsadlib import logger
-from tsadlib.utils.scaler import minmax_scaler
 from .base import BaseDataset
 from ..plotting import LinePlot
+from ..utils.scaler import minmax_scaler_column_wise
 
 
 class MBADataset(BaseDataset):
@@ -83,8 +83,8 @@ class MBADataset(BaseDataset):
         # Normalize data using min-max scaling
         if is_normalize:
             logger.info("Normalizing data using min-max strategy")
-            train, min_a, max_a = minmax_scaler(train)
-            test, _, _ = minmax_scaler(test, min_a, max_a)
+            train, min_a, max_a = minmax_scaler_column_wise(train)
+            test, _, _ = minmax_scaler_column_wise(test, min_a, max_a)
 
         # Create binary labels array with ±20 sample window
         ls = self.labels_data.values[:, 1].astype(int)

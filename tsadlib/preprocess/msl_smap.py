@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
 from tsadlib import logger
-from tsadlib.utils.scaler import minmax_scaler
+from tsadlib.utils.scaler import minmax_scaler_column_wise
 from .base import BaseDataset
 from ..plotting import LinePlot
 
@@ -100,8 +100,8 @@ class MSLSMAPDataset(BaseDataset):
 
             if is_normalize:
                 # Min-max normalization
-                train_data, min_vals, max_vals = minmax_scaler(train_data)
-                test_data, _, _ = minmax_scaler(test_data, min_vals, max_vals)
+                train_data, min_vals, max_vals = minmax_scaler_column_wise(train_data)
+                test_data, _, _ = minmax_scaler_column_wise(test_data, min_vals, max_vals)
 
             # Store processed data
             self.train[channel_id] = train_data

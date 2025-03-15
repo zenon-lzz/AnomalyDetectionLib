@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
 from tsadlib import logger
-from tsadlib.utils.scaler import minmax_scaler
+from tsadlib.utils.scaler import minmax_scaler_column_wise
 from .base import BaseDataset
 from ..plotting import LinePlot
 
@@ -59,9 +59,9 @@ class MSDSDataset(BaseDataset):
         # Normalize data using min-max scaling
         if is_normalize:
             logger.info("Normalizing data using min-max strategy")
-            _, min_a, max_a = minmax_scaler(np.concatenate((train, test), axis=0))
-            train, _, _ = minmax_scaler(train, min_a, max_a)
-            test, _, _ = minmax_scaler(test, min_a, max_a)
+            _, min_a, max_a = minmax_scaler_column_wise(np.concatenate((train, test), axis=0))
+            train, _, _ = minmax_scaler_column_wise(train, min_a, max_a)
+            test, _, _ = minmax_scaler_column_wise(test, min_a, max_a)
 
         labels = self.labels_data.to_numpy()[::1, 1:]
 

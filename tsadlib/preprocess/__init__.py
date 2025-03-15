@@ -10,6 +10,7 @@ from .msds import MSDSDataset
 from .msl_smap import MSLSMAPDataset
 from .nab import NABDataset
 from .smd import SMDDataset
+from .swat import SWaTDataset
 from .ucr import UCRDataset
 from .wadi import WADIDataset
 
@@ -20,5 +21,6 @@ __all__ = [
     'MSLSMAPDataset',
     'SMDDataset',
     'WADIDataset',
-    'UCRDataset'
+    'UCRDataset',
+    'SWaTDataset'
 ]
