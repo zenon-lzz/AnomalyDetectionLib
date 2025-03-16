@@ -30,3 +30,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(seed)
         # If multiple Gpus are used, set the random number seed for all Gpus
         torch.cuda.manual_seed_all(seed)
+
+    # mps
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
+        torch.mps.manual_seed_all(seed)

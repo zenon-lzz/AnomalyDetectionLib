@@ -6,9 +6,11 @@
 ==================================================
 """
 from .utils.logger import logger
+from .utils.type import ConfigType
 
 
 __version__ = '0.1.0'
 __all__ = [
-    'logger'
+    'logger',
+    'ConfigType'
 ]

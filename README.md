@@ -17,6 +17,16 @@ for time-series data. It provides a unified benchmark for implementing and evalu
 - ⚡ **Scalability**: Efficient handling of large-scale time-series datasets.
 - 📊 **Visualization**: Built-in tools for visualizing detected anomalies.
 - 🛠 **Customizable**: Easily extendable to include new detection models.
+- 📦 **Preprocessed Datasets**: Ready-to-use anomaly detection datasets:
+  - **MBA**: MIT-BIH Supraventricular Arrhythmia ECG data
+  - **MSDS**: Multi-Source Distributed System data
+  - **NAB**: Numenta Anomaly Benchmark
+  - **MSL**: Mars Science Laboratory spacecraft data
+  - **SMAP**: Soil Moisture Active Passive spacecraft datas
+  - **SMD**: Server Machine Dataset
+  - **WADI**: Water Distribution testbed data
+  - **UCR**: HexagonML (UCR) dataset Time Series Data
+  - **SWaT**: Secure Water Treatment data
 
 ## 🚀 Installation
 
