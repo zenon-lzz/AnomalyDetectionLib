@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: Line plot utilities for time series visualization
 Contains functions for smoothing signals and plotting multi-dimensional time series data

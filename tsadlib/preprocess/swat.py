@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: SWaT (Secure Water Treatment) Dataset preprocess module
 Details refer to the paper "SWaT: a water treatment testbed for research and training on ICS security"

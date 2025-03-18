@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: MSL (Mars Science Laboratory) and SMAP (Soil Moisture Active Passive) Dataset preprocess module
 Details refer to the paper "Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding"

@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-15
 @Description：TimesBlock's Convolution Blocks in TimesNet
 ==================================================

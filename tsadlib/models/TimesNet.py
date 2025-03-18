@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-15
 @Description：TimesNet: Temporal 2D-Variation Modeling for General Time Series Analysis
 Paper link: https://openreview.net/pdf?id=ju_Uqw384Oq

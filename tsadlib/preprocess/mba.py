@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-12
 @Description：MBA (MIT-BIH Supraventricular Arrhythmia Database) dataset preprocess module
 Details refer to the paper "The impact of the MIT-BIH arrhythmia database"

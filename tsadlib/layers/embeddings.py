@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-16
 @Description: Various embedding implementations for time series data processign
 ==================================================

@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: HexagonML (UCR) dataset Time Series Dataset preprocess module
 Details refer to the paper "The UCR Time Series Classification Archive"

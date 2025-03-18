@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: SMD (Server Machine Dataset) Dataset preprocess module
 Details refer to the paper "Robust Anomaly Detection for Multivariate Time Series through Stochastic Recurrent Neural Network"

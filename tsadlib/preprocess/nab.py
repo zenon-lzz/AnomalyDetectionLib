@@ -1,6 +1,6 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-13
 @Description: NAB (Numenta Anomaly Benchmark) Dataset preprocess module
 Details refer to the paper "Evaluating Real-time Anomaly Detection Algorithms"

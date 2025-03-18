@@ -1,49 +1,48 @@
 """
 =================================================
-@Author: Zhenzhou Liu
+@Author: Zenon
 @Date: 2025-03-16
-@Description: SWaT (Secure Water Treatment) Dataset Loader
-    This module implements a PyTorch Dataset for the SWaT dataset,
-    which contains industrial control system data from a water treatment plant.
-    
-    Features:
-    - CSV-based data loading
-    - Sliding window approach for time series segmentation
-    - Data standardization
-    - Train/Val/Test split handling
+@Description: SMAP (Soil Moisture Active Passive) Dataset Loader
+    This module provides a PyTorch Dataset implementation for the SMAP anomaly detection dataset.
+    Key Features:
+    - Sliding window-based data sampling
+    - Data standardization using StandardScaler
+    - Train/Validation/Test split handling
+    - Configurable window size and step size
 ==================================================
 """
 import os
 
 import numpy as np
-import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
+from tsadlib import logger
 
-class SWATSegLoader(Dataset):
+
+class SMAPDataset(Dataset):
     """
-    PyTorch Dataset for SWaT (Secure Water Treatment) data.
+    PyTorch Dataset implementation for SMAP telemetry data.
     
     Features:
-    - Loads CSV data from industrial control system
-    - Implements sliding window for time series segmentation
+    - Loads and preprocesses SMAP satellite telemetry data
+    - Implements sliding window mechanism for sequence data
+    - Handles train/validation/test splits
     - Performs data standardization
-    - Supports train/validation/test splits
     
     Dataset Structure:
-    - Training data: Normal operation data
-    - Test data: Contains both normal and attack scenarios
-    - Labels: Binary indicators for normal/attack states
+    - Training data: Main telemetry data for training
+    - Validation: Last 20% of training data
+    - Test data: Separate test set with anomaly labels
     """
 
     def __init__(self, args, root_path, win_size, step=1, flag="train"):
         """
-        Initialize SWaT dataloader.
+        Initialize SMAP dataset.
         
         Args:
             args: Configuration arguments
-            root_path: Path to SWaT dataset directory
+            root_path: Path to SMAP dataset directory
             win_size: Size of sliding window
             step: Step size for window sliding (default: 1)
             flag: Dataset split identifier ("train"/"val"/"test")
@@ -51,43 +50,33 @@ class SWATSegLoader(Dataset):
         self.flag = flag
         self.step = step
         self.win_size = win_size
+
+        # Initialize and fit StandardScaler on training data
         self.scaler = StandardScaler()
+        data = np.load(os.path.join(root_path, "SMAP_train.npy"))
+        self.scaler.fit(data)
+        data = self.scaler.transform(data)
 
-        # Load CSV data files
-        train_data = pd.read_csv(os.path.join(root_path, 'swat_train2.csv'))
-        test_data = pd.read_csv(os.path.join(root_path, 'swat2.csv'))
+        # Load and transform test data
+        test_data = np.load(os.path.join(root_path, "SMAP_test.npy"))
+        self.test = self.scaler.transform(test_data)
+        self.train = data
 
-        # Extract labels from the last column of test data
-        labels = test_data.values[:, -1:]
-
-        # Remove label column from feature data
-        train_data = train_data.values[:, :-1]
-        test_data = test_data.values[:, :-1]
-
-        # Standardize data using training set statistics
-        self.scaler.fit(train_data)
-        train_data = self.scaler.transform(train_data)
-        test_data = self.scaler.transform(test_data)
-
-        # Store processed data
-        self.train = train_data
-        self.test = test_data
-
-        # Create validation split (last 20% of training data)
+        # Split validation set from training data (last 20%)
         data_len = len(self.train)
-        self.val = self.train[int(data_len * 0.8):]
+        self.val = self.train[(int)(data_len * 0.8):]
 
-        # Store test labels
-        self.test_labels = labels
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
+        # Load test labels for anomaly detection
+        self.test_labels = np.load(os.path.join(root_path, "SMAP_test_label.npy"))
+        logger.info(f'test set\'s shape: {self.test.shape}')
+        logger.info(f'train set\'s shape: {self.train.shape}')
 
     def __len__(self):
         """
-        Calculate number of windows in the dataset.
+        Calculate total number of samples based on window size and step.
         
         Returns:
-            int: Number of available windows based on window size and step
+            int: Number of available windows in the dataset
         
         Note:
             Different calculation for normal mode (step-based) and 
@@ -100,23 +89,24 @@ class SWATSegLoader(Dataset):
         elif self.flag == 'test':
             return (self.test.shape[0] - self.win_size) // self.step + 1
         else:
+            # Special case: non-overlapping windows
             return (self.test.shape[0] - self.win_size) // self.win_size + 1
 
     def __getitem__(self, index):
         """
-        Get a window of sensor data and corresponding labels.
+        Get a single sample window and its corresponding labels.
         
         Args:
-            index: Index of the window
+            index: Index of the window to retrieve
         
         Returns:
             tuple: (window_data, window_labels)
-                - window_data: Normalized sensor readings [win_size, n_sensors]
-                - window_labels: Anomaly labels [win_size]
+                - window_data: Normalized data window [win_size, features]
+                - window_labels: Corresponding anomaly labels [win_size]
         
         Note:
-            - Train/val use initial test labels
-            - Test uses aligned test labels
+            - Train/val modes use initial test labels
+            - Test mode uses aligned test labels
             - Special mode uses non-overlapping windows
         """
         index = index * self.step
