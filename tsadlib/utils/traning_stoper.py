@@ -91,5 +91,8 @@ class EarlyStopping:
         """
         if self.verbose:
             logger.info(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+
+        if not os.path.exists(path):
+            os.makedirs(path)
         torch.save(model.state_dict(), os.path.join(path, f'{'model' if file_name is None else file_name}.pth'))
         self.val_loss_min = val_loss

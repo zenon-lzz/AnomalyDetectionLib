@@ -17,7 +17,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
-from tsadlib import logger
+from utils.logger import logger
 
 
 class SMAPDataset(Dataset):

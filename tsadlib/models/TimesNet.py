@@ -11,9 +11,10 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from tsadlib import ConfigType
+
 from tsadlib.layers.Conv_Blocks import InceptionBlockV1
 from tsadlib.layers.embeddings import DataEmbedding
+from utils.type import ConfigType
 
 
 def FFT_for_Period(x, k=2):
