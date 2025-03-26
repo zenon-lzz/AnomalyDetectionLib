@@ -11,15 +11,15 @@ from typing import Tuple
 
 from torch.utils.data import DataLoader, Dataset
 
+from tsadlib.configs.type import ConfigType
 from .datasets.msl import MSLDataset
 from .datasets.smap import SMAPDataset
 from .datasets.smd import SMDDataset
 from .datasets.swat import SWATDataset
-from ..utils.type import ConfigType
 
 # Registry of available datasets
 # Maps dataset names to their corresponding Dataset classes
-data_dict = {
+dataset_dict = {
     'MSL': MSLDataset,
     'SMAP': SMAPDataset,
     'SMD': SMDDataset,
@@ -40,7 +40,7 @@ def data_provider(args: ConfigType, flag: str) -> Tuple[Dataset, DataLoader]:
         args (ConfigType): Configuration containing:
             - dataset: Name of dataset to use
             - root_path: Path to dataset files
-            - seq_len: Sequence length for windows
+            - window_length: Sequence length for windows
             - batch_size: Size of batches
             - num_workers: Number of worker processes
         flag (str): Dataset split identifier ('train'/'val'/'test')
@@ -56,7 +56,7 @@ def data_provider(args: ConfigType, flag: str) -> Tuple[Dataset, DataLoader]:
         - Incomplete final batches are kept (drop_last=False)
     """
     # Select appropriate dataset class
-    dataset_class = data_dict[args.dataset]
+    dataset_class = dataset_dict[args.dataset]
     drop_last = False
     batch_size = args.batch_size
     # Disable shuffling for test set to maintain temporal order
@@ -66,7 +66,7 @@ def data_provider(args: ConfigType, flag: str) -> Tuple[Dataset, DataLoader]:
     dataset = dataset_class(
         args=args,
         root_path=args.root_path,
-        win_size=args.seq_len,
+        win_size=args.window_length,
         flag=flag,
     )
 

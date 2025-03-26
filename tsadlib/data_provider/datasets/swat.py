@@ -20,6 +20,8 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
+from tsadlib.utils.logger import logger
+
 
 class SWATDataset(Dataset):
     """
@@ -79,8 +81,10 @@ class SWATDataset(Dataset):
 
         # Store test labels
         self.test_labels = labels
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
+        if flag == 'train':
+            logger.info(f'train set\'s shape: {self.train.shape}')
+        elif flag == 'test':
+            logger.info(f'test set\'s shape: {self.test.shape}')
 
     def __len__(self):
         """

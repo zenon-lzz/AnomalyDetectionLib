@@ -2,7 +2,7 @@
 =================================================
 @Author: Zenon
 @Date: 2025-03-16
-@Description: Various embedding implementations for time series data processign
+@Description: Various embedding implementations for time series data procession
 ==================================================
 """
 import math
@@ -29,7 +29,7 @@ class PositionalEmbedding(nn.Module):
         pe = torch.zeros(max_len, d_model).float()
         pe.require_grad = False
 
-        # calculate \frac{pos}{10000^[\frac{pos}{d_{model}}}}
+        # calculate :math: \frac{pos}{10000^[\frac{pos}{d_{model}}}}
         # position: numerator
         position = torch.arange(0, max_len).float().unsqueeze(1)
         # div_term: reciprocal denominator
@@ -54,10 +54,10 @@ class TokenEmbedding(nn.Module):
     Provides local context through convolution operation.
     """
 
-    def __init__(self, c_in, d_model):
+    def __init__(self, input_channels, d_model):
         """
         Args:
-            c_in: Number of input channels/features
+            input_channels: Number of input channels/features
             d_model: Output embedding dimension
         """
         super(TokenEmbedding, self).__init__()
@@ -65,7 +65,7 @@ class TokenEmbedding(nn.Module):
         # Before 1.5.0: padding = (kernel_size - 1) // 2 = 2
         # After 1.5.0: padding = kernel_size // 2 = 1
         padding = 1 if torch.__version__ >= '1.5.0' else 2
-        self.tokenConv = nn.Conv1d(in_channels=c_in, out_channels=d_model,
+        self.tokenConv = nn.Conv1d(in_channels=input_channels, out_channels=d_model,
                                    kernel_size=3, padding=padding, padding_mode='circular', bias=False)
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
@@ -84,25 +84,25 @@ class FixedEmbedding(nn.Module):
     Primarily used for encoding temporal features with fixed patterns.
     """
 
-    def __init__(self, c_in, d_model):
+    def __init__(self, input_channels, d_model):
         """
         Args:
-            c_in: Input vocabulary size (e.g., 24 for hours)
+            input_channels: Input vocabulary size (e.g., 24 for hours)
             d_model: Output embedding dimension
         """
         super(FixedEmbedding, self).__init__()
 
-        w = torch.zeros(c_in, d_model).float()
+        w = torch.zeros(input_channels, d_model).float()
         w.require_grad = False
 
-        position = torch.arange(0, c_in).float().unsqueeze(1)
+        position = torch.arange(0, input_channels).float().unsqueeze(1)
         div_term = (torch.arange(0, d_model, 2).float()
                     * -(math.log(10000.0) / d_model)).exp()
 
         w[:, 0::2] = torch.sin(position * div_term)
         w[:, 1::2] = torch.cos(position * div_term)
 
-        self.emb = nn.Embedding(c_in, d_model)
+        self.emb = nn.Embedding(input_channels, d_model)
         # use the positional encoding as embedding's weight and not update it
         self.emb.weight = nn.Parameter(w, requires_grad=False)
 
@@ -114,18 +114,18 @@ class TemporalEmbedding(nn.Module):
     """Comprehensive time feature embedding.
     
     Combines multiple temporal embeddings (month, day, weekday, hour, minute)
-    Can use either fixed or trainable embeddings based on embed_type.
+    Can use either fixed or trainable embeddings based on embedding_type.
     
     Application:
     - When timestamp information is available
     - When temporal patterns are important (e.g., daily, weekly patterns)
     """
 
-    def __init__(self, d_model, embed_type='fixed', freq='h'):
+    def __init__(self, d_model, embedding_type='fixed', freq='h'):
         """
         Args:
             d_model: Output embedding dimension
-            embed_type: 'fixed' for FixedEmbedding or 'learned' for trainable embedding
+            embedding_type: 'fixed' for FixedEmbedding or 'learned' for trainable embedding
             freq: Time frequency ('h' for hourly, 't' for minutely)
         """
         super(TemporalEmbedding, self).__init__()
@@ -145,7 +145,7 @@ class TemporalEmbedding(nn.Module):
         # Months in a year (1-12) plus padding/special token (0)
         month_size = 13
 
-        Embed = FixedEmbedding if embed_type == 'fixed' else nn.Embedding
+        Embed = FixedEmbedding if embedding_type == 'fixed' else nn.Embedding
         if freq == 't':
             self.minute_embed = Embed(minute_size, d_model)
         self.hour_embed = Embed(hour_size, d_model)
@@ -175,11 +175,11 @@ class TimeFeatureEmbedding(nn.Module):
     - When computational efficiency is priority
     """
 
-    def __init__(self, d_model, embed_type='timeF', freq='h'):
+    def __init__(self, d_model, embedding_type='timeF', freq='h'):
         """
         Args:
             d_model: Output embedding dimension
-            embed_type: Type of embedding (only 'timeF' supported)
+            embedding_type: Type of embedding (only 'timeF' supported)
             freq: Time frequency determining input dimension
         """
         super(TimeFeatureEmbedding, self).__init__()
@@ -206,29 +206,29 @@ class DataEmbedding(nn.Module):
     - When both value patterns and temporal patterns are important
     """
 
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
+    def __init__(self, input_channels, d_model, embedding_type='fixed', freq='h', dropout=0.1):
         """
         Args:
-            c_in: Number of input features
+            input_channels: Number of input features
             d_model: Output embedding dimension
-            embed_type: Type of temporal embedding ('fixed', 'learned', or 'timeF')
+            embedding_type: Type of temporal embedding ('fixed', 'learned', or 'timeF')
             freq: Time frequency
             dropout: Dropout rate
         """
         super(DataEmbedding, self).__init__()
 
-        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.value_embedding = TokenEmbedding(input_channels=input_channels, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
-                                                    freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
-            d_model=d_model, embed_type=embed_type, freq=freq)
+        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embedding_type=embedding_type,
+                                                    freq=freq) if embedding_type != 'timeF' else TimeFeatureEmbedding(
+            d_model=d_model, embedding_type=embedding_type, freq=freq)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
         """
         Args:
-            x: Input values [batch_size, seq_len, features]
-            x_mark: Temporal features [batch_size, seq_len, time_features]
+            x: Input values [batch_size, window_length, features]
+            x_mark: Temporal features [batch_size, window_length, time_features]
                    If None, only value and position embeddings are used
         """
         if x_mark is None:

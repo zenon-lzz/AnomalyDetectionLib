@@ -19,6 +19,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
+from tsadlib.utils.logger import logger
+
 
 class SMDDataset(Dataset):
     """
@@ -67,6 +69,10 @@ class SMDDataset(Dataset):
 
         # Load anomaly labels for test set
         self.test_labels = np.load(os.path.join(root_path, "SMD_test_label.npy"))
+        if flag == 'train':
+            logger.info(f'train set\'s shape: {self.train.shape}')
+        elif flag == 'test':
+            logger.info(f'test set\'s shape: {self.test.shape}')
 
     def __len__(self):
         """

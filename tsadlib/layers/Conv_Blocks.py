@@ -28,23 +28,23 @@ class InceptionBlockV1(nn.Module):
     - Processes features uniformly across both spatial dimensions
     """
 
-    def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
+    def __init__(self, input_channels, output_channels, num_kernels=6, init_weight=True):
         """Initialize the Inception block V1.
         
         Args:
-            in_channels: Number of input channels
-            out_channels: Number of output channels
+            input_channels: Number of input channels
+            output_channels: Number of output channels
             num_kernels: Number of different kernel sizes to use
             init_weight: Whether to initialize weights using Kaiming initialization
         """
         super(InceptionBlockV1, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.input_channels = input_channels
+        self.output_channels = output_channels
         self.num_kernels = num_kernels
         kernels = []
         # Create kernels with increasing size: 1x1, 3x3, 5x5, 7x7, 9x9, 11x11
         for i in range(self.num_kernels):
-            kernels.append(nn.Conv2d(in_channels, out_channels, kernel_size=2 * i + 1, padding=i))
+            kernels.append(nn.Conv2d(input_channels, output_channels, kernel_size=2 * i + 1, padding=i))
         self.kernels = nn.ModuleList(kernels)
         if init_weight:
             self._initialize_weights()
@@ -89,28 +89,28 @@ class InceptionBlockV2(nn.Module):
     - Includes an additional 1x1 convolution
     """
 
-    def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
+    def __init__(self, input_channels, output_channels, num_kernels=6, init_weight=True):
         """Initialize the Inception block V2.
         
         Args:
-            in_channels: Number of input channels
-            out_channels: Number of output channels
+            input_channels: Number of input channels
+            output_channels: Number of output channels
             num_kernels: Total number of kernel pairs (vertical + horizontal)
             init_weight: Whether to initialize weights using Kaiming initialization
         """
         super(InceptionBlockV2, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.input_channels = input_channels
+        self.output_channels = output_channels
         self.num_kernels = num_kernels
         kernels = []
         # Create pairs of kernels: one vertical and one horizontal
         for i in range(self.num_kernels // 2):
             # Horizontal kernel: 1×(2i+3)
-            kernels.append(nn.Conv2d(in_channels, out_channels, kernel_size=(1, 2 * i + 3), padding=(0, i + 1)))
+            kernels.append(nn.Conv2d(input_channels, output_channels, kernel_size=(1, 2 * i + 3), padding=(0, i + 1)))
             # Vertical kernel: (2i+3)×1
-            kernels.append(nn.Conv2d(in_channels, out_channels, kernel_size=(2 * i + 3, 1), padding=(i + 1, 0)))
+            kernels.append(nn.Conv2d(input_channels, output_channels, kernel_size=(2 * i + 3, 1), padding=(i + 1, 0)))
         # Additional 1x1 convolution for point-wise processing
-        kernels.append(nn.Conv2d(in_channels, out_channels, kernel_size=1))
+        kernels.append(nn.Conv2d(input_channels, output_channels, kernel_size=1))
         self.kernels = nn.ModuleList(kernels)
         if init_weight:
             self._initialize_weights()

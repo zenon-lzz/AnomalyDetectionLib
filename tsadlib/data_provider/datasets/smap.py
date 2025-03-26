@@ -68,8 +68,10 @@ class SMAPDataset(Dataset):
 
         # Load test labels for anomaly detection
         self.test_labels = np.load(os.path.join(root_path, "SMAP_test_label.npy"))
-        logger.info(f'test set\'s shape: {self.test.shape}')
-        logger.info(f'train set\'s shape: {self.train.shape}')
+        if flag == 'train':
+            logger.info(f'train set\'s shape: {self.train.shape}')
+        elif flag == 'test':
+            logger.info(f'test set\'s shape: {self.test.shape}')
 
     def __len__(self):
         """

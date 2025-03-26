@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger as _logger
 
-from tsadlib.utils.constants import PROJECT_ROOT
+from tsadlib.configs.constants import PROJECT_ROOT
 
 # Log levels in loguru (from lowest to highest):
 # TRACE (5): Detailed information for debugging
