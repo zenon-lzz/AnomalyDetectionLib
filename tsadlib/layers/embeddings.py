@@ -206,12 +206,12 @@ class DataEmbedding(nn.Module):
     - When both value patterns and temporal patterns are important
     """
 
-    def __init__(self, input_channels, d_model, embedding_type='fixed', freq='h', dropout=0.1):
+    def __init__(self, input_channels, d_model, embedding_type='normal', freq='h', dropout=0.1):
         """
         Args:
             input_channels: Number of input features
             d_model: Output embedding dimension
-            embedding_type: Type of temporal embedding ('fixed', 'learned', or 'timeF')
+            embedding_type: Type of temporal embedding ('fixed', 'normal', or 'timeF')
             freq: Time frequency
             dropout: Dropout rate
         """
@@ -219,16 +219,17 @@ class DataEmbedding(nn.Module):
 
         self.value_embedding = TokenEmbedding(input_channels=input_channels, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embedding_type=embedding_type,
-                                                    freq=freq) if embedding_type != 'timeF' else TimeFeatureEmbedding(
-            d_model=d_model, embedding_type=embedding_type, freq=freq)
+        if embedding_type == 'fixed':
+            self.temporal_embedding = TemporalEmbedding(d_model=d_model, embedding_type=embedding_type, freq=freq)
+        elif embedding_type == 'timeF':
+            self.temporal_embedding = TimeFeatureEmbedding(d_model=d_model, embedding_type=embedding_type, freq=freq)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
         """
         Args:
-            x: Input values [batch_size, window_length, features]
-            x_mark: Temporal features [batch_size, window_length, time_features]
+            x: Input values [batch_size, window_size, features]
+            x_mark: Temporal features [batch_size, window_size, time_features]
                    If None, only value and position embeddings are used
         """
         if x_mark is None:

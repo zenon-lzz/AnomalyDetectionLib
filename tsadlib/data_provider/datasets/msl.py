@@ -1,55 +1,48 @@
-'''
+"""
 =================================================
 @Author: Zenon
 @Date: 2025-03-16
 @Description: MSL (Mars Science Laboratory) Dataset
     This module provides a PyTorch Dataset implementation for the MSL anomaly detection dataset.
-    Features:
-    - Sliding window-based data loading
-    - Data standardization
-    - Train/Val/Test split handling
-    - Configurable step size for window sliding
+    The MSL dataset contains telemetry data from the Mars Science Laboratory rover mission,
+    with labeled anomalies for testing and evaluation of anomaly detection algorithms.
 ==================================================
-'''
+"""
 import os
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from torch.utils.data import Dataset
 
-from tsadlib.utils.logger import logger
+from .base import BaseDataset
 
 
-class MSLDataset(Dataset):
+class MSLDataset(BaseDataset):
     """
-    PyTorch Dataset for MSL anomaly detection data.
+    PyTorch Dataset implementation for the Mars Science Laboratory (MSL) anomaly detection dataset.
     
-    Features:
-    - Loads and preprocesses MSL telemetry data
-    - Implements sliding window mechanism
-    - Supports train/validation/test splits
-    - Standardizes data using StandardScaler
+    This dataset contains telemetry data from the Mars Science Laboratory rover mission.
+    The class handles data loading, preprocessing, and windowing for time series analysis.
+    It inherits window handling functionality from the BaseDataset class.
     
-    Data Structure:
-    - Training data: Normalized telemetry data
-    - Test data: Separate test set with labels
-    - Validation: Last 20% of training data
+    Attributes:
+        scaler (StandardScaler): Scaler for data normalization
+        train (np.ndarray): Training data after normalization
+        test (np.ndarray): Test data after normalization
+        test_labels (np.ndarray): Anomaly labels for test data
     """
 
-    def __init__(self, args, root_path, win_size, step=1, flag='train'):
+    def __init__(self, root_path, win_size, step=1, mode='train'):
         """
         Initialize the MSL dataset.
         
         Args:
-            args: Configuration arguments
-            root_path: Path to MSL dataset files
-            win_size: Size of sliding window
-            step: Step size for sliding window (default: 1)
-            flag: Dataset split to use ('train'/'val'/'test')
+            root_path (str): Path to the dataset files
+            win_size (int): Size of the sliding window
+            step (int): Step size for the sliding window
+            mode (str): 'train' or 'test' mode
         """
-        self.flag = flag
-        self.step = step
-        self.win_size = win_size
+        # Initialize the base class with window parameters
+        super(MSLDataset, self).__init__(win_size, step, mode)
 
         # Initialize and fit StandardScaler on training data
         self.scaler = StandardScaler()
@@ -57,68 +50,12 @@ class MSLDataset(Dataset):
         self.scaler.fit(data)
         data = self.scaler.transform(data)
 
-        # Load and transform test data
-        test_data = np.load(os.path.join(root_path, 'MSL_test.npy'))
-        self.test = self.scaler.transform(test_data)
-        self.train = data
-
-        # Create validation split (last 20% of training data)
-        data_len = len(self.train)
-        self.val = self.train[int(data_len * 0.8):]
-
-        # Load test labels
-        self.test_labels = np.load(os.path.join(root_path, 'MSL_test_label.npy'))
-        if flag == 'train':
-            logger.info(f'train set\'s shape: {self.train.shape}')
-        elif flag == 'test':
-            logger.info(f'test set\'s shape: {self.test.shape}')
-
-
-    def __len__(self):
-        """
-        Calculate number of samples based on window size and step.
-        
-        Returns:
-            int: Number of available windows in the dataset
-        """
-        if self.flag == 'train':
-            return (self.train.shape[0] - self.win_size) // self.step + 1
-        elif self.flag == 'val':
-            return (self.val.shape[0] - self.win_size) // self.step + 1
-        elif self.flag == 'test':
-            return (self.test.shape[0] - self.win_size) // self.step + 1
-        else:
-            # Special case for non-overlapping windows
-            return (self.test.shape[0] - self.win_size) // self.win_size + 1
-
-    def __getitem__(self, index):
-        """
-        Get a single sample using sliding window.
-        
-        Args:
-            index: Index of the window
-        
-        Returns:
-            tuple: (window_data, window_labels)
-                - window_data: Normalized data window [win_size, features]
-                - window_labels: Corresponding labels [win_size]
-        
-        Note:
-            - For train/val: Uses same initial labels
-            - For test: Uses corresponding test labels
-            - Special case uses non-overlapping windows
-        """
-        index = index * self.step
-        if self.flag == 'train':
-            return np.float32(self.train[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
-        elif self.flag == 'val':
-            return np.float32(self.val[index:index + self.win_size]), np.float32(self.test_labels[0:self.win_size])
-        elif self.flag == 'test':
-            return np.float32(self.test[index:index + self.win_size]), np.float32(
-                self.test_labels[index:index + self.win_size])
-        else:
-            # Special case: non-overlapping windows
-            start_idx = index // self.step * self.win_size
-            end_idx = start_idx + self.win_size
-            return np.float32(self.test[start_idx:end_idx]), np.float32(
-                self.test_labels[start_idx:end_idx])
+        if mode == 'train':
+            # Store normalized training data
+            self.train = data
+        elif mode == 'test':
+            # Load and transform test data
+            test_data = np.load(os.path.join(root_path, 'MSL_test.npy'))
+            self.test = self.scaler.transform(test_data)
+            # Load test labels
+            self.test_labels = np.load(os.path.join(root_path, 'MSL_test_label.npy'))

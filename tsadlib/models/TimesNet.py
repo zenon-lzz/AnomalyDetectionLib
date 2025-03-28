@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from tsadlib.configs.type import ConfigType
-from tsadlib.layers.Conv_Blocks import InceptionBlockV1
+from tsadlib.layers.convolution_block import InceptionBlockV1
 from tsadlib.layers.embeddings import DataEmbedding
 
 
@@ -71,7 +71,7 @@ class TimesBlock(nn.Module):
     
     Args:
         configs (ConfigType): Configuration object containing:
-            - window_length: Length of input sequence
+            - window_size: Length of input sequence
             - top_k: Number of top periods to consider
             - d_model: Input dimension
             - d_ff: Hidden dimension for feed-forward network
@@ -84,21 +84,21 @@ class TimesBlock(nn.Module):
         
         Args:
             configs: Configuration containing:
-                window_length: Input sequence length
+                window_size: Input sequence length
                 top_k: Number of periods to consider
                 d_model: Model dimension
                 d_ff: Feed-forward dimension
                 num_kernels: Number of inception kernels
         """
         super(TimesBlock, self).__init__()
-        self.window_length = configs.window_length
+        self.window_size = configs.window_size
         self.k = configs.top_k
         # parameter-efficient design
         self.conv = nn.Sequential(
-            InceptionBlockV1(configs.dimension_model, configs.dimension_fcl,
+            InceptionBlockV1(configs.d_model, configs.dimension_fcl,
                              num_kernels=configs.num_kernels),
             nn.GELU(),
-            InceptionBlockV1(configs.dimension_fcl, configs.dimension_model,
+            InceptionBlockV1(configs.dimension_fcl, configs.d_model,
                              num_kernels=configs.num_kernels)
         )
 
@@ -133,13 +133,13 @@ class TimesBlock(nn.Module):
         for i in range(self.k):
             period = period_list[i]
             # Handle sequences that don't divide evenly by the period
-            if self.window_length % period != 0:
+            if self.window_size % period != 0:
                 # Pad sequence to make it divisible by period
-                length = (self.window_length // period + 1) * period
-                padding = torch.zeros([x.shape[0], length - self.window_length, x.shape[2]]).to(x.device)
+                length = (self.window_size // period + 1) * period
+                padding = torch.zeros([x.shape[0], length - self.window_size, x.shape[2]]).to(x.device)
                 out = torch.cat([x, padding], dim=1)
             else:
-                length = self.window_length
+                length = self.window_size
                 out = x
 
             # Reshape time series into 2D representation [B, N, length // period, period]
@@ -149,7 +149,7 @@ class TimesBlock(nn.Module):
             # Reshape back to original temporal dimension [B, length // period, period, N] -> [B, length, N]
             out = out.permute(0, 2, 3, 1).reshape(B, -1, N)
             # Remove padding if added
-            res.append(out[:, :self.window_length, :])
+            res.append(out[:, :self.window_size, :])
 
         # Stack results from all periods
         res = torch.stack(res, dim=-1)  # Shape: [B, T, N, k]
@@ -189,7 +189,7 @@ class Model(nn.Module):
         
         Args:
             configs: Configuration containing:
-                window_length: Sequence length
+                window_size: Sequence length
                 enc_in: Input dimension
                 d_model: Model dimension
                 c_out: Output dimension
@@ -200,14 +200,14 @@ class Model(nn.Module):
         """
         super(Model, self).__init__()
         self.configs = configs
-        self.window_length = configs.window_length
+        self.window_size = configs.window_size
         self.model = nn.ModuleList([TimesBlock(configs) for _ in range(configs.encoder_layers)])
-        self.encoder_embedding = DataEmbedding(configs.input_channels, configs.dimension_model, configs.embedding_type,
+        self.encoder_embedding = DataEmbedding(configs.input_channels, configs.d_model, configs.embedding_type,
                                                configs.freq,
                                            configs.dropout)
         self.layer = configs.encoder_layers
-        self.layer_norm = nn.LayerNorm(configs.dimension_model)
-        self.projection = nn.Linear(configs.dimension_model, configs.output_channels, bias=True)
+        self.layer_norm = nn.LayerNorm(configs.d_model)
+        self.projection = nn.Linear(configs.d_model, configs.output_channels, bias=True)
 
     def forward(self, x):
         """
@@ -244,6 +244,6 @@ class Model(nn.Module):
         dec_out = self.projection(enc_out)
 
         # De-Normalization from Non-stationary Transformer
-        dec_out = dec_out * std_deviation[:, 0, :].unsqueeze(1).repeat(1, self.window_length, 1)
-        dec_out = dec_out + means[:, 0, :].unsqueeze(1).repeat(1, self.window_length, 1)
+        dec_out = dec_out * std_deviation[:, 0, :].unsqueeze(1).repeat(1, self.window_size, 1)
+        dec_out = dec_out + means[:, 0, :].unsqueeze(1).repeat(1, self.window_size, 1)
         return dec_out
