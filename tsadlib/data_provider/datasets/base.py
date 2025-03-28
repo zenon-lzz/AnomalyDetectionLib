@@ -72,9 +72,8 @@ class BaseDataset(Dataset):
         """
         index = index * self.step
         if self.mode == 'train':
-            # Return window from training data
-            # Note: Using None as placeholder labels for training
-            return np.float32(self.train[index:index + self.win_size]), None
+            # Use a zero array for training labels
+            return np.float32(self.train[index:index + self.win_size]), np.zeros((self.win_size, 1), dtype=np.float32)
         elif self.mode == 'test':
             # Return window from test data with corresponding labels
             return np.float32(self.test[index:index + self.win_size]), np.float32(

@@ -33,11 +33,11 @@ def data_provider(args: ConfigType, split_way: str = 'train_no_split', validate_
     dataset_class = dataset_dict[args.dataset]
     batch_size = args.batch_size
 
-    test_dataset = dataset_class(dataset_root_path=args.dataset_root_path, win_size=args.window_size, mode='test')
+    test_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, mode='test')
 
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=args.num_workers)
 
-    train_dataset = dataset_class(dataset_root_path=args.dataset_root_path, win_size=args.window_size, mode='train')
+    train_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, mode='train')
 
     train_length = len(train_dataset)
 
