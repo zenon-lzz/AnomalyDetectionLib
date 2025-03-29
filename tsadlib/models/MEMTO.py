@@ -11,7 +11,6 @@ import torch.nn.functional as F
 from torch import nn
 
 from tsadlib.configs.type import ConfigType
-from tsadlib.layers.attention_layer import AttentionLayer
 from tsadlib.layers.embeddings import DataEmbedding
 from tsadlib.layers.memory_layer import MemoryLayer
 
@@ -37,7 +36,7 @@ class EncoderLayer(nn.Module):
         :param x: [B x L x C(d_model)]
         :return:
         """
-        out = self.attention_layer(x)
+        out, _ = self.attention_layer(x, x, x)
         x = x + self.dropout(out)
         y = x = self.norm1(x)
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
@@ -88,7 +87,7 @@ class MEMTO(nn.Module):
         self.memory_layer = MemoryLayer(configs.num_memory, configs.d_model, shrink_threshold, memory_init_embedding,
                                         configs.mode)
 
-        self.weak_decoder = nn.Linear(configs.d_model, configs.output_channels)
+        self.weak_decoder = nn.Linear(2 * configs.d_model, configs.output_channels)
 
     def forward(self, x):
         x = self.embedding(x)  # embedding : N x L x C(=d_model)
@@ -100,10 +99,7 @@ class MEMTO(nn.Module):
 
         memory = self.memory_layer.memory
 
-        if self.memory_init_embedding is None:
-            return {"output": output, "memory_item_embedding": None, "queries": queries, "memory": memory}
-        else:
-            output = self.weak_decoder(output)
-            return {"output": output, "memory_item_embedding": memory_item_embedding, "queries": queries,
-                    "memory": memory,
-                    "attention": attention}
+        output = self.weak_decoder(output)
+        return {"output": output, "queries": queries,
+                "memory": memory,
+                "attention": attention}

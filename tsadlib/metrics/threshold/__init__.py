@@ -10,5 +10,6 @@ from .basics import *
 from .pot import SPOT
 
 __all__ = [
-    'SPOT'
+    'SPOT',
+    'percentile_threshold'
 ]

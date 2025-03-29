@@ -27,15 +27,9 @@ class ConfigType:
 
     model: str = field()  # Model name (e.g., 'TimesNet')
 
-    # Dataset Information
-    dataset: str = field()  # Dataset name (e.g., 'MSL', 'SMAP', 'SMD')
-    dataset_root_path: str = field()  # Root path to dataset
-
     # Model Architecture Parameters
-    top_k: int = field()  # Top k time-frequency combinations (TimesNet)
     d_model: int = field()  # Model dimension
     dimension_fcl: int = field()  # Feed-forward layer dimension
-    num_kernels: int = field()  # Number of convolutional kernels
     encoder_layers: int = field()  # Number of encoder layers
     input_channels: int = field()  # Input channel dimension
     output_channels: int = field()  # Output channel dimension
@@ -50,6 +44,10 @@ class ConfigType:
     # Parameters that have default value
     mode: str = field(default='train')  # Model's execution status, options: ['train', 'test']
     # Model Architecture Parameters
+    top_k: int = field(default=3)  # Top k time-frequency combinations (TimesNet)
+    dataset: str = field(default='MSL')  # Dataset name (e.g., 'MSL', 'SMAP', 'SMD')
+    dataset_root_path: str = field(default='data')  # Root path to dataset
+    num_kernels: int = field(default=6)  # Number of convolutional kernels
     embedding_type: str = field(default='normal')  # Type of embedding (e.g., 'timeF')
     freq: str = field(default='h')  # freq for time features encoding,
     # options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly],

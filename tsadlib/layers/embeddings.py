@@ -225,7 +225,7 @@ class DataEmbedding(nn.Module):
             self.temporal_embedding = TimeFeatureEmbedding(d_model=d_model, embedding_type=embedding_type, freq=freq)
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, x, x_mark):
+    def forward(self, x, x_mark=None):
         """
         Args:
             x: Input values [batch_size, window_size, features]
