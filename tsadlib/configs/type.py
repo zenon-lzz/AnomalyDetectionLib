@@ -58,6 +58,7 @@ class ConfigType:
     hyper_parameter_lambda: float = field(default=0.01)
     n_heads: int = field(default=8)  # The number of heads in Multiple Head Attention
     num_memory: int = field(default=10)  # The number of Memory slots
+    temperature: float = field(default=0.1)  # The latent space deviation hyperparameter in MEMTO
 
     # Training Parameters
     num_epochs: int = field(default=10)  # Number of training epochs

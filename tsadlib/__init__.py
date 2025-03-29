@@ -9,7 +9,7 @@ from .configs import constants
 from .configs.type import ConfigType
 from .data_provider.data_factory import data_provider
 from .metrics import threshold
-from .models.TimesNet import Model as TimesNet
+from .models.TimesNet import TimesNet
 from .utils.logger import logger
 from .utils.traning_stoper import OneEarlyStopping, TwoEarlyStopping
 

@@ -67,42 +67,43 @@ class Encoder(nn.Module):
         return x
 
 
-class Model(nn.Module):
+class MEMTO(nn.Module):
 
-    def __init__(self, configs: ConfigType, shrink_threshold=0.):
-        super(Model, self).__init__()
+    def __init__(self, configs: ConfigType, memory_init_embedding=None, shrink_threshold=0.):
+        super(MEMTO, self).__init__()
 
-        self.memory_initial = configs.memory_initial
+        self.memory_init_embedding = memory_init_embedding
         self.embedding = DataEmbedding(configs.input_channels, configs.d_model, dropout=configs.dropout)
         self.encoder = Encoder(
             [
                 EncoderLayer(
-                    AttentionLayer(configs.window_size, configs.d_model, configs.n_heads, dropout=configs.dropout),
+                    nn.MultiheadAttention(embed_dim=configs.d_model, num_heads=configs.n_heads, dropout=configs.dropout,
+                                          batch_first=True),
                     configs.d_model, configs.dimension_fcl, dropout=configs.dropout, activation='gelu'
                 ) for _ in range(configs.encoder_layers)
             ],
             normalization=nn.LayerNorm(configs.d_model)
         )
 
-        self.memory_layer = MemoryLayer(configs.num_memory, configs.d_model, shrink_threshold, configs.memory_initial,
+        self.memory_layer = MemoryLayer(configs.num_memory, configs.d_model, shrink_threshold, memory_init_embedding,
                                         configs.mode)
 
         self.weak_decoder = nn.Linear(configs.d_model, configs.output_channels)
 
     def forward(self, x):
         x = self.embedding(x)  # embedding : N x L x C(=d_model)
-        queries = out = self.encoder(x)  # encoder out : N x L x C(=d_model)
+        queries = output = self.encoder(x)  # encoder out : N x L x C(=d_model)
 
-        outputs = self.memory_layer(out)
-        out, attention, memory_item_embedding = outputs['output'], outputs['attention'], outputs[
+        output_dict = self.memory_layer(output)
+        output, attention, memory_item_embedding = output_dict['output'], output_dict['attention'], output_dict[
             'memory_init_embedding']
 
         memory = self.memory_layer.memory
 
-        if self.memory_initial:
-            return {"out": out, "memory_item_embedding": None, "queries": queries, "memory": memory}
+        if self.memory_init_embedding is None:
+            return {"output": output, "memory_item_embedding": None, "queries": queries, "memory": memory}
         else:
-
-            out = self.weak_decoder(out)
-            return {"out": out, "memory_item_embedding": memory_item_embedding, "queries": queries, "memory": memory,
-                    "attn": attention}
+            output = self.weak_decoder(output)
+            return {"output": output, "memory_item_embedding": memory_item_embedding, "queries": queries,
+                    "memory": memory,
+                    "attention": attention}

@@ -165,7 +165,7 @@ class TimesBlock(nn.Module):
         return res
 
 
-class Model(nn.Module):
+class TimesNet(nn.Module):
     """
     Complete TimesNet model for time series processing.
     
@@ -198,7 +198,7 @@ class Model(nn.Module):
                 freq: Time frequency
                 dropout: Dropout rate
         """
-        super(Model, self).__init__()
+        super(TimesNet, self).__init__()
         self.configs = configs
         self.window_size = configs.window_size
         self.model = nn.ModuleList([TimesBlock(configs) for _ in range(configs.encoder_layers)])

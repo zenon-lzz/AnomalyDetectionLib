@@ -33,16 +33,21 @@ log_file = os.path.join(log_dir, f"{current_time:%H-%M-%S}.log")  # log/YYYY/mm/
 # 2️⃣ Clear the default Loguru configuration (to prevent repeated addition of handlers)
 _logger.remove()
 
+LEVEL = 'INFO'
+
 # 3️⃣ Configure console logs (INFO and above, color enabled)
 _logger.add(
     sink=lambda msg: print(msg, end=""),  # output to console
-    level="INFO",  # Will capture INFO (20) and above levels
-    colorize=True
+    level=LEVEL,  # Will capture INFO (20) and above levels
+    colorize=True,
+    format='{time:YYYY-MM-DD HH:mm:ss.SSS} | {name}:{function}:{line} | <level>{level}</level>: <level>{message}</level>'
 )
 
 # 4️⃣ Configuration file logs (all logs are stored in a unique log file)
 _logger.add(
-    log_file, level="INFO", encoding="utf-8"  # Will capture INFO (20) and above levels
+    log_file, level=LEVEL, encoding="utf-8",  # Will capture INFO (20) and above levels
+    # colorize=True,
+    format='{time:YYYY-MM-DD HH:mm:ss.SSS} | {name}:{function}:{line} | <level>{level}</level>: <level>{message}</level>'
 )
 
 # Export the logger with type hint
@@ -50,3 +55,12 @@ if TYPE_CHECKING:
     from loguru import Logger
 
 logger: "Logger" = _logger
+
+if __name__ == '__main__':
+    logger.trace('trace info')
+    logger.debug('trace info')
+    logger.info('trace info')
+    logger.warning('trace info')
+    logger.success('trace info')
+    logger.error('trace info')
+    logger.critical('trace info')
