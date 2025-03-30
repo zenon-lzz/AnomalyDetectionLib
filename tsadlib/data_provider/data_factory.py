@@ -14,9 +14,12 @@ from torch.utils.data import DataLoader, Subset
 
 from tsadlib.configs.type import ConfigType
 from .datasets.msl import MSLDataset
+from .datasets.nips_ts import NIPSTSWaterDataset, NIPSTSSwanDataset, NIPSTSCCardDataset
+from .datasets.psm import PSMDataset
 from .datasets.smap import SMAPDataset
 from .datasets.smd import SMDDataset
-from .datasets.swat import SWATDataset
+from .datasets.swat import SWaTDataset
+from .datasets.wadi import WADIDataset
 
 # Registry of available datasets
 # Maps dataset names to their corresponding Dataset classes
@@ -24,7 +27,12 @@ dataset_dict = {
     'MSL': MSLDataset,
     'SMAP': SMAPDataset,
     'SMD': SMDDataset,
-    'SWAT': SWATDataset
+    'SWaT': SWaTDataset,
+    'PSM': PSMDataset,
+    'WADI': WADIDataset,
+    'NIPS_TS_Water': NIPSTSWaterDataset,
+    'NIPS_TS_Swan': NIPSTSSwanDataset,
+    'NIPS_TS_CCard': NIPSTSCCardDataset
 }
 
 
@@ -56,11 +64,13 @@ tuple[DataLoader[Any] | None, ...]:
     batch_size = args.batch_size
 
     # Create test dataset and dataloader
-    test_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, mode='test')
+    test_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, step=args.window_size,
+                                 mode='test')
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=args.num_workers)
 
     # Create training dataset
-    train_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, mode='train')
+    train_dataset = dataset_class(root_path=args.dataset_root_path, win_size=args.window_size, step=args.window_size,
+                                  mode='train')
     train_length = len(train_dataset)
 
     if split_way == 'train_validate_split':

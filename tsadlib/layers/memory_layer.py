@@ -62,7 +62,7 @@ class MemoryLayer(nn.Module):
             memory_init_embedding: Pre-initialized memory embeddings
             mode: Operating mode ('train' or 'test')
         """
-        super(MemoryLayer, self).__init__()
+        super().__init__()
 
         self.num_memory = num_memory
         self.feature_dimension = feature_dimension  # C(=d_model)

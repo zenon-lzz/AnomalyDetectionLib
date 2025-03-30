@@ -18,7 +18,7 @@ from tsadlib.layers.memory_layer import MemoryLayer
 class EncoderLayer(nn.Module):
 
     def __init__(self, attention_layer, d_model, dimension_fcl=None, dropout=0.1, activation='relu'):
-        super(EncoderLayer, self).__init__()
+        super().__init__()
         if dimension_fcl is None:
             dimension_fcl = 4 * d_model
 
@@ -47,7 +47,7 @@ class EncoderLayer(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(self, attention_layers, normalization=None):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.attention_layers = nn.ModuleList(attention_layers)
         self.normalization = normalization
 
@@ -69,7 +69,7 @@ class Encoder(nn.Module):
 class MEMTO(nn.Module):
 
     def __init__(self, configs: ConfigType, memory_init_embedding=None, shrink_threshold=0.):
-        super(MEMTO, self).__init__()
+        super().__init__()
 
         self.memory_init_embedding = memory_init_embedding
         self.embedding = DataEmbedding(configs.input_channels, configs.d_model, dropout=configs.dropout)

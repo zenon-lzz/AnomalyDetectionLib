@@ -24,7 +24,7 @@ class PositionalEmbedding(nn.Module):
             d_model: Dimension of the model
             max_len: Maximum sequence length to pre-compute
         """
-        super(PositionalEmbedding, self).__init__()
+        super().__init__()
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model).float()
         pe.require_grad = False
@@ -60,7 +60,7 @@ class TokenEmbedding(nn.Module):
             input_channels: Number of input channels/features
             d_model: Output embedding dimension
         """
-        super(TokenEmbedding, self).__init__()
+        super().__init__()
         # In PyTorch 1.5.0, the padding calculation for Conv1d was updated
         # Before 1.5.0: padding = (kernel_size - 1) // 2 = 2
         # After 1.5.0: padding = kernel_size // 2 = 1
@@ -90,7 +90,7 @@ class FixedEmbedding(nn.Module):
             input_channels: Input vocabulary size (e.g., 24 for hours)
             d_model: Output embedding dimension
         """
-        super(FixedEmbedding, self).__init__()
+        super().__init__()
 
         w = torch.zeros(input_channels, d_model).float()
         w.require_grad = False
@@ -128,7 +128,7 @@ class TemporalEmbedding(nn.Module):
             embedding_type: 'fixed' for FixedEmbedding or 'learned' for trainable embedding
             freq: Time frequency ('h' for hourly, 't' for minutely)
         """
-        super(TemporalEmbedding, self).__init__()
+        super().__init__()
 
         # Minute divisions: 4 intervals of 15 minutes each (0-14, 15-29, 30-44, 45-59)
         minute_size = 4
@@ -182,7 +182,7 @@ class TimeFeatureEmbedding(nn.Module):
             embedding_type: Type of embedding (only 'timeF' supported)
             freq: Time frequency determining input dimension
         """
-        super(TimeFeatureEmbedding, self).__init__()
+        super().__init__()
 
         freq_map = {'h': 4, 't': 5, 's': 6,
                     'm': 1, 'a': 1, 'w': 2, 'd': 3, 'b': 3}
@@ -215,7 +215,7 @@ class DataEmbedding(nn.Module):
             freq: Time frequency
             dropout: Dropout rate
         """
-        super(DataEmbedding, self).__init__()
+        super().__init__()
 
         self.value_embedding = TokenEmbedding(input_channels=input_channels, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)

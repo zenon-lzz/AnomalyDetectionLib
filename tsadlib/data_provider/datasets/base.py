@@ -34,6 +34,7 @@ class BaseDataset(Dataset):
             step (int): Step size for the sliding window
             mode (str): 'train' or 'test' mode
         """
+        super().__init__()
         self.mode = mode
         self.step = step
         self.win_size = win_size

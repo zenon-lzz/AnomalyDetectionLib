@@ -41,7 +41,7 @@ class SMDDataset(BaseDataset):
             mode (str): 'train' or 'test' mode
         """
         # Initialize the base class with window parameters
-        super(SMDDataset, self).__init__(win_size, step, mode)
+        super().__init__(win_size, step, mode)
 
         # Initialize and fit StandardScaler on training data
         self.scaler = StandardScaler()

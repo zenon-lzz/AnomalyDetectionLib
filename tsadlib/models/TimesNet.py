@@ -90,7 +90,7 @@ class TimesBlock(nn.Module):
                 d_ff: Feed-forward dimension
                 num_kernels: Number of inception kernels
         """
-        super(TimesBlock, self).__init__()
+        super().__init__()
         self.window_size = configs.window_size
         self.k = configs.top_k
         # parameter-efficient design
@@ -198,7 +198,7 @@ class TimesNet(nn.Module):
                 freq: Time frequency
                 dropout: Dropout rate
         """
-        super(TimesNet, self).__init__()
+        super().__init__()
         self.configs = configs
         self.window_size = configs.window_size
         self.model = nn.ModuleList([TimesBlock(configs) for _ in range(configs.encoder_layers)])

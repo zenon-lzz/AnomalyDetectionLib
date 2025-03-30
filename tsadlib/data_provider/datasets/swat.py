@@ -16,7 +16,7 @@ from sklearn.preprocessing import StandardScaler
 from .base import BaseDataset
 
 
-class SWATDataset(BaseDataset):
+class SWaTDataset(BaseDataset):
     """
     PyTorch Dataset implementation for the Secure Water Treatment (SWaT) dataset.
     
@@ -42,7 +42,7 @@ class SWATDataset(BaseDataset):
             mode (str): 'train' or 'test' mode
         """
         # Initialize the base class with window parameters
-        super(SWATDataset, self).__init__(win_size, step, mode)
+        super().__init__(win_size, step, mode)
 
         # Load training data and exclude the label column
         train_data = pd.read_csv(os.path.join(root_path, 'swat_train2.csv')).values[:, :-1]

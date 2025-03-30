@@ -37,7 +37,7 @@ class InceptionBlockV1(nn.Module):
             num_kernels: Number of different kernel sizes to use
             init_weight: Whether to initialize weights using Kaiming initialization
         """
-        super(InceptionBlockV1, self).__init__()
+        super().__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.num_kernels = num_kernels
@@ -98,7 +98,7 @@ class InceptionBlockV2(nn.Module):
             num_kernels: Total number of kernel pairs (vertical + horizontal)
             init_weight: Whether to initialize weights using Kaiming initialization
         """
-        super(InceptionBlockV2, self).__init__()
+        super().__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.num_kernels = num_kernels
