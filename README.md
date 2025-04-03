@@ -30,6 +30,16 @@ for time-series data. It provides a unified benchmark for implementing and evalu
 
 ## 🚀 Installation
 
+```bash
+# 通过pip安装
+pip install tsadlib
+
+# 或者从源码安装
+git clone https://github.com/skyearth-lzz/AnomalyDetectionLib.git
+cd AnomalyDetectionLib
+pip install -e .
+```
+
 ## 🏗 Supported Models
 
 - **Statistical Methods**: Z-score, Moving Average, ARIMA
