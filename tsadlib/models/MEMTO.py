@@ -4,7 +4,7 @@
 @Date: 2025-03-26
 @Description：MEMTO: Memory-guided Transformer for Multivariate Time Series Anomaly Detection
 Paper link: https://arxiv.org/abs/2312.02530
-Code Repository: https://github.com/gunny97/MEMTO.git
+Code Repository: https://github.com/gunny97/MEMTO
 ==================================================
 """
 import torch.nn.functional as F

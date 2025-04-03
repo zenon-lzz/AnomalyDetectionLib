@@ -29,21 +29,18 @@ class ConfigType:
 
     # Model Architecture Parameters
     d_model: int = field()  # Model dimension
-    dimension_fcl: int = field()  # Feed-forward layer dimension
-    encoder_layers: int = field()  # Number of encoder layers
     input_channels: int = field()  # Input channel dimension
     output_channels: int = field()  # Output channel dimension
     dropout: float = field()  # Dropout rate for regularization
     batch_size: int = field()  # Batch size for training/testing
     window_size: int = field()  # Sequence/window length for time series
 
-    # Training Parameters
-    learning_rate: float = field()  # Learning rate for optimizer
-    anomaly_ratio: float = field()  # Expected ratio of anomalies in data
-
     # Parameters that have default value
     mode: str = field(default='train')  # Model's execution status, options: ['train', 'test']
+
     # Model Architecture Parameters
+    dimension_fcl: int = field(default=16)  # Feed-forward layer dimension
+    encoder_layers: int = field(default=1)  # Number of encoder layers
     top_k: int = field(default=3)  # Top k time-frequency combinations (TimesNet)
     dataset: str = field(default='MSL')  # Dataset name (e.g., 'MSL', 'SMAP', 'SMD')
     dataset_root_path: str = field(default='data')  # Root path to dataset
@@ -56,11 +53,18 @@ class ConfigType:
     hyper_parameter_lambda: float = field(default=0.01)
     n_heads: int = field(default=8)  # The number of heads in Multiple Head Attention
     num_memory: int = field(default=10)  # The number of Memory slots
-    temperature: float = field(default=0.1)  # The latent space deviation hyperparameter in MEMTO
+    temperature: float = field(default=0.1)  # The latent space deviation hyperparameter
+    patch_list: list[int] = field(default_factory=lambda: [10, 20])
+    kernel_list: list[int] = field(default_factory=lambda: [5])
 
     # Training Parameters
     num_epochs: int = field(default=10)  # Number of training epochs
     patience: int = field(default=10)  # Patience for early stopping
+    learning_rate: float = field(default=1e-4)  # Learning rate for optimizer
+    end_learning_rate: float = field(default=5e-5)
+    weight_decay: float = field(default=5e-5)
+    warmup_epoch: int = field(default=0)
+    anomaly_ratio: float = field(default=1)  # Expected ratio of anomalies in data
 
     # Autoconfigure DataLoader's num_workers based on debug status and system
     num_workers: int = field(

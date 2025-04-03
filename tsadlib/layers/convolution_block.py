@@ -2,7 +2,16 @@
 =================================================
 @Author: Zenon
 @Date: 2025-03-15
-@Description：TimesBlock's Convolution Blocks in TimesNet
+@Description: Multi-scale convolutional blocks for time series processing
+
+This module implements various Inception-style convolutional blocks adapted for:
+- 2D feature extraction (InceptionBlockV1/V2)
+- 1D time series processing (InceptionBlock1d)
+
+Key Features:
+1. InceptionBlockV1: Symmetric square kernels for uniform feature extraction
+2. InceptionBlockV2: Asymmetric rectangular kernels for directional patterns  
+3. InceptionBlock1d: Specialized 1D convolutions for temporal data with circular padding
 ==================================================
 """
 import torch
@@ -133,3 +142,90 @@ class InceptionBlockV2(nn.Module):
             res_list.append(self.kernels[i](x))
         res = torch.stack(res_list, dim=-1).mean(-1)
         return res
+
+
+class InceptionBlock1d(nn.Module):
+    """1D Inception-style convolutional block for temporal pattern extraction.
+    
+    Processes 1D time series data using parallel convolutions with different kernel sizes
+    to capture patterns at multiple temporal scales. Uses circular padding to maintain
+    temporal continuity at sequence boundaries.
+    
+    Typical Use Cases:
+    - Multi-scale time series feature extraction
+    - Anomaly detection in temporal sequences
+    - Processing of periodic/cyclical time series data
+
+    Architecture Highlights:
+    - Multiple parallel 1D convolutions with configurable kernel sizes
+    - Circular padding for boundary continuity
+    - Grouped convolutions for parameter efficiency
+    - Kaiming weight initialization
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_list, groups=1, init_weight=True):
+        """Initialize the 1D Inception block.
+        
+        Args:
+            in_channels (int): Number of input channels/features
+            out_channels (int): Number of output channels/features
+            kernel_list (list[int]): List of kernel sizes for parallel convolutions
+            groups (int): Number of groups for grouped convolution (default: 1)
+            init_weight (bool): Whether to initialize weights (default: True)
+        """
+        super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_list = kernel_list
+
+        # Initialize parallel convolution branches
+        kernels = []
+        for kernel_size in self.kernel_list:
+            kernels.append(nn.Conv1d(
+                in_channels,
+                out_channels,
+                kernel_size=kernel_size,
+                padding='same',  # Maintains input sequence length
+                padding_mode='circular',  # Preserves temporal continuity
+                bias=False,  # Omit bias for efficiency
+                groups=groups  # Enable grouped convolutions
+            ))
+        self.convolutions = nn.ModuleList(kernels)
+
+        if init_weight:
+            self._initialize_weights()
+
+    def _initialize_weights(self):
+        """Initialize weights using Kaiming normal initialization scheme.
+        
+        Uses ReLU nonlinear initialization for all 1D convolutional layers.
+        Initializes biases to zero if present (though typically disabled).
+        """
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        """Forward pass through the 1D Inception block.
+        
+        Args:
+            x (Tensor): Input tensor of shape [batch, channels, time_steps]
+            
+        Returns:
+            Tensor: Output features combining multi-scale patterns
+                   Shape: [batch, out_channels, time_steps]
+                   
+        Processing Steps:
+        1. Apply each parallel convolution branch
+        2. Combine results through averaging
+        3. Maintain original temporal resolution
+        """
+        # Process through all convolution branches
+        res_list = []
+        for conv in self.convolutions:
+            res_list.append(conv(x))
+
+        # Average multi-scale features
+        return torch.stack(res_list, dim=-1).mean(-1)

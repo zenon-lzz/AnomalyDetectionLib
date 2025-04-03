@@ -22,6 +22,94 @@ from torch import nn
 from tsadlib.utils.logger import logger
 
 
+def generate_rolling_matrix(input_matrix):
+    """Generate a rolling window matrix from input tensor.
+    
+    Creates a 3D tensor where each slice contains a rolled version of the input
+    matrix along its columns. Used for creating periodic memory patterns.
+    
+    Args:
+        input_matrix: 2D input tensor (rows x columns)
+        
+    Returns:
+        3D tensor (columns x rows x columns) containing all rolled versions
+    """
+    rows, columns = input_matrix.size()
+    # Initialize output tensor with shape [num_rolls, rows, columns]
+    output_matrix = torch.empty(columns, rows, columns)
+
+    # Generate each rolled version of the input matrix
+    for step in range(columns):
+        # Circular shift along columns dimension
+        rolled_matrix = input_matrix.roll(shifts=step, dims=1)
+        # Store rolled version in corresponding output slice
+        output_matrix[step] = rolled_matrix
+
+    return output_matrix
+
+
+def create_memory_matrix(d_model, length, memory_type='sinusoid', option='option1'):
+    """Initialize memory matrix with specified pattern type.
+    
+    Creates real and imaginary components of memory matrix using different
+    initialization strategies. Supports periodic and random patterns.
+    
+    Args:
+        d_model: Dimension of memory slots
+        length: Number of memory slots
+        memory_type: Initialization pattern type:
+            'sinusoid' - Sine/cosine wave pattern
+            'uniform' - Uniform random values  
+            'normal' - Normal random values
+            'orthogonal_*' - Orthogonal random matrices
+            '*_only' variants use only real component
+        option: Special processing option:
+            'option4' - Apply rolling window transformation
+            
+    Returns:
+        Tuple of (real_component, imaginary_component) tensors
+    """
+    with torch.no_grad():  # Disable gradient tracking for initialization
+        # Sinusoidal/cosine wave pattern initialization
+        if memory_type == 'sinusoid' or memory_type == 'cosine_only':
+            # Create grid of indices for wave generation
+            row_indices = torch.arange(d_model).reshape(-1, 1)
+            col_indices = torch.arange(length)
+            grid = row_indices * col_indices  # Outer product
+
+            # Generate wave patterns with different phases
+            init_matrix_r = torch.cos((1 / length) * 2 * torch.pi * grid)  # Cosine component
+            init_matrix_i = torch.sin((1 / length) * 2 * torch.pi * grid)  # Sine component
+
+        # Random pattern initializations
+        elif memory_type == 'uniform' or memory_type == 'uniform_only':
+            init_matrix_r = torch.rand((d_model, length), dtype=torch.float)
+            init_matrix_i = torch.rand((d_model, length), dtype=torch.float)
+
+        elif memory_type == 'orthogonal_uniform' or memory_type == 'orthogonal_uniform_only':
+            init_matrix_r = torch.nn.init.orthogonal_(torch.rand((d_model, length), dtype=torch.float))
+            init_matrix_i = torch.nn.init.orthogonal_(torch.rand((d_model, length), dtype=torch.float))
+
+        elif memory_type == 'normal' or memory_type == 'normal_only':
+            init_matrix_r = torch.randn((d_model, length), dtype=torch.float)
+            init_matrix_i = torch.randn((d_model, length), dtype=torch.float)
+
+        elif memory_type == 'orthogonal_normal' or memory_type == 'orthogonal_normal_only':
+            init_matrix_r = torch.nn.init.orthogonal_(torch.randn((d_model, length), dtype=torch.float))
+            init_matrix_i = torch.nn.init.orthogonal_(torch.randn((d_model, length), dtype=torch.float))
+
+        # Apply rolling window transformation if specified
+        if option == 'option4':
+            init_matrix_r = generate_rolling_matrix(init_matrix_r)
+            init_matrix_i = generate_rolling_matrix(init_matrix_i)
+
+        # Return components based on initialization type
+        if 'only' not in memory_type:
+            return init_matrix_r, init_matrix_i  # Both components
+        else:
+            return init_matrix_r, torch.zeros_like(init_matrix_r)  # Real component only
+
+
 def hard_shrink_relu(attention, hyper_lambda=0.0025, epsilon=1e-12):
     """
     Apply hard shrinkage with ReLU activation to attention scores.

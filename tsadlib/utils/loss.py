@@ -127,3 +127,74 @@ class GatheringLoss(nn.Module):
         gathering_loss = gathering_loss.contiguous().view(batch_size, -1)  # (N, L)
 
         return gathering_loss
+
+
+def harmonic_loss_compute(t_loss: torch.Tensor,
+                          f_loss: torch.Tensor,
+                          operator: str = 'mean') -> torch.Tensor:
+    """Compute harmonic loss combining time and frequency domain losses.
+    
+    This function implements various strategies to combine time and frequency domain
+    losses for time series anomaly detection. The combination methods include:
+    - Weighted mean/max using softmax attention
+    - Harmonic mean/max of both domains
+    - Simple multiplication of means
+    
+    Args:
+        t_loss: Time domain loss tensor of shape [B, L, C]
+            where B=batch, L=sequence length, C=channels
+        f_loss: Frequency domain loss tensor of shape [B, L, C]
+            Must have same shape as t_loss
+        operator: Combination method, one of:
+            'mean': Weighted mean using frequency attention
+            'max': Weighted max using frequency attention  
+            'harmonic_mean': Equal weight harmonic mean
+            'harmonic_max': Equal weight harmonic max
+            'normal_mean': Simple mean multiplication
+            
+    Returns:
+        Combined loss tensor of shape [B, L] (reduced over channels)
+        
+    Raises:
+        AssertionError: If operator is not in supported methods
+    """
+    # Validate operator type
+    assert operator in ['normal_mean', 'mean', 'max', 'harmonic_mean', 'harmonic_max']
+
+    # Compute statistics along sequence dimension (L)
+    # t_wa: time weighted average [B, 1, C]
+    # f_wa: frequency weighted average [B, 1, C]
+    t_wa = t_loss.mean(dim=-2, keepdim=True)
+    f_wa = f_loss.mean(dim=-2, keepdim=True)
+
+    # t_wm: time weighted max [B, 1, C] 
+    # f_wm: frequency weighted max [B, 1, C]
+    t_wm = t_loss.max(dim=-2, keepdim=True)[0]
+    f_wm = f_loss.max(dim=-2, keepdim=True)[0]
+
+    # Apply different combination strategies
+    if operator == 'mean':
+        # Weighted mean: time loss * frequency attention weights
+        loss = (t_loss * torch.softmax(f_wa, dim=-1)).max(dim=-1)[0]
+
+    elif operator == 'max':
+        # Weighted max: time loss * frequency attention weights 
+        loss = (t_loss * torch.softmax(f_wm, dim=-1)).max(dim=-1)[0]
+
+    elif operator == 'harmonic_mean':
+        # Harmonic mean: balanced combination of both domains
+        nt_loss = (t_loss * torch.softmax(f_wa, dim=-1)).mean(dim=-1)
+        nf_loss = (f_loss * torch.softmax(t_wa, dim=-1)).mean(dim=-1)
+        loss = (nt_loss + nf_loss) / 2
+
+    elif operator == 'harmonic_max':
+        # Harmonic max: balanced combination of both domains
+        nt_loss = (t_loss * torch.softmax(f_wm, dim=-1)).max(dim=-1)[0]
+        nf_loss = (f_loss * torch.softmax(t_wm, dim=-1)).max(dim=-1)[0]
+        loss = (nt_loss + nf_loss) / 2
+
+    elif operator == 'normal_mean':
+        # Simple multiplication of means
+        loss = t_loss.mean(dim=-1) * f_loss
+
+    return loss
