@@ -176,3 +176,4 @@ Results/
 checkpoints/
 runs/
 .DS_Store
+.github/
