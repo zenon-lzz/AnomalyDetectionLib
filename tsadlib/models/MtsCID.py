@@ -32,7 +32,7 @@ class TemporalEncoder(nn.Module):
         self.fcl_normalization_layer = nn.ModuleList([nn.LayerNorm(d_model) for _ in range(num_in_networks)])
 
         self.intra_variate_transformer_layer = nn.ModuleList(
-            [ComplexAttentionLayer(d_model, 1, dropout=0.1) for _ in range(num_in_networks)])
+            [ComplexAttentionLayer(d_model, 1, dropout=0.1, need_weights=False) for _ in range(num_in_networks)])
         self.intra_variate_transformer_normalization_layer = nn.ModuleList(
             [nn.LayerNorm(d_model) for _ in range(num_in_networks)])
 
@@ -79,7 +79,7 @@ class InterVariateEncoder(nn.Module):
 
         w_model = win_size // 2 + 1
         self.inter_variate_transformer_layer = nn.ModuleList(
-            [ComplexAttentionLayer(w_model, 1, dropout=0.1) for _ in range(num_in_networks)])
+            [ComplexAttentionLayer(w_model, 1, dropout=0.1, need_weights=False) for _ in range(num_in_networks)])
         self.inter_variate_transformer_normalization_layer = nn.ModuleList(
             [nn.LayerNorm(win_size) for _ in range(num_in_networks)])
 
@@ -97,6 +97,7 @@ class InterVariateEncoder(nn.Module):
         x = complex_operator(self.inter_variate_transformer_layer, x)
         x = torch.fft.irfft(x, dim=-1)
         x = complex_operator(self.inter_variate_transformer_normalization_layer, x)
+        x = x.permute(0, 2, 1)
 
         if self.use_position_embedding:
             x = x + self.position_embedding(x)
@@ -119,7 +120,7 @@ class Decoder(nn.Module):
         x = complex_operator(self.projector, x)
         x = complex_operator(self.normalization_layer, x)
 
-        return self.dropout(x)
+        return x
 
 
 class MtsCID(nn.Module):
@@ -130,8 +131,8 @@ class MtsCID(nn.Module):
         self.init_type = init_type
         self.gain = gain
 
-        temporal_branch_dimension = configs.input_channels if self.temporal_brach_dimension_match == 'none' else configs.d_model
-        inter_variate_branch_dimension = configs.input_channels if self.inter_variate_brach_dimension_match == 'none' else configs.d_model
+        temporal_branch_dimension = configs.input_channels
+        inter_variate_branch_dimension = configs.input_channels
 
         self.temporal_encoder = TemporalEncoder(configs.input_channels, temporal_branch_dimension,
                                                 win_size=configs.window_size,
@@ -144,14 +145,14 @@ class MtsCID(nn.Module):
         self.memory_real, self.memory_imaginary = create_memory_matrix(inter_variate_branch_dimension,
                                                                        configs.window_size, 'sinusoid', 'options2')
 
-        temporal_branch_output_dimension = configs.output_channels if self.temporal_brach_dimension_match == 'none' else configs.d_model
+        temporal_branch_output_dimension = configs.output_channels
 
-        self.weak_decoder = Decoder(temporal_branch_output_dimension, configs.output_channels, configs.window_size)
+        self.weak_decoder = Decoder(temporal_branch_output_dimension, configs.output_channels)
 
-        if self.temporal_brach_dimension_match == 'none':
-            self.feature_projector = nn.Identity()
-        else:
-            self.feature_projector = nn.Linear(temporal_branch_output_dimension, configs.output_channels)
+        # if self.temporal_brach_dimension_match == 'none':
+        #     self.feature_projector = nn.Identity()
+        # else:
+        #     self.feature_projector = nn.Linear(temporal_branch_output_dimension, configs.output_channels)
 
         self.init_modules()
 
@@ -183,15 +184,16 @@ class MtsCID(nn.Module):
         z1 = z2 = x
         device = x.device
 
-        temporal_queries, _ = self.temporal_encoder(z1)
-        inter_queries, _ = self.inter_variate_encoder(z2)
+        temporal_queries = self.temporal_encoder(z1)
+        inter_queries = self.inter_variate_encoder(z2)
         memory = self.memory_real.T.to(device)
 
         attention = torch.einsum('blf,jl->bfj', inter_queries, self.memory_real.to(device).detach())
         attention = torch.softmax(attention / self.temperature, dim=-1)
 
-        combined_z = self.feature_prj(temporal_queries)
+        # combined_z = self.feature_prj(temporal_queries)
+        combined_z = temporal_queries
 
-        output, _ = self.weak_decoder(combined_z)
+        output = self.weak_decoder(combined_z)
 
         return {"output": output, "queries": inter_queries, "memory": memory, "attention": attention}

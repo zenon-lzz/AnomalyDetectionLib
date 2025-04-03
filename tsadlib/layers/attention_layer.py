@@ -26,15 +26,16 @@ class ComplexAttentionLayer(nn.Module):
         dropout: Dropout probability for attention weights
     """
 
-    def __init__(self, d_model, n_heads, scale=None, dropout=0.0):
+    def __init__(self, d_model, n_heads, scale=None, dropout=0.0, need_weights=True):
         """Initialize attention layer parameters."""
         super().__init__()
+        self.need_weights = need_weights
         self.dropout = nn.Dropout(dropout)
         # Ensure number of heads divides feature dimension evenly
         self.n_heads = n_heads if (d_model % n_heads) == 0 else 1
 
         # Calculate head dimension and scaling factor
-        z = d_model if n_heads == 1 else (d_model // n_heads)
+        z = torch.Tensor([d_model if n_heads == 1 else (d_model // n_heads)])
         self.scale = scale if scale is not None else 1. / torch.sqrt(z)
 
     def forward(self, input_data):
@@ -59,15 +60,20 @@ class ComplexAttentionLayer(nn.Module):
         attention_scores = complex_einsum('nlhd,nshd->nhls', queries, keys)
 
         # Apply scaling and softmax
+        self.scale = self.scale.to(input_data.device)
         attention_weights = complex_softmax(self.scale * attention_scores, dim=-1)
 
         # Compute weighted sum of values
         output = complex_einsum('nhls,nshd->nlhd', attention_weights, values).contiguous()
 
         # Average attention weights across heads
-        attention_weights = attention_weights.permute(0, 2, 1, 3).mean(dim=-2)
+        attention_weights = attention_weights.permute(0, 2, 1, 3).mean(dim=-2).reshape(batch, length, -1).contiguous()
+        output = complex_dropout(self.dropout, output).reshape(batch, length, -1).contiguous()
 
-        return complex_dropout(self.dropout, output), attention_weights
+        if self.need_weights:
+            return output, attention_weights
+        else:
+            return output
 
 
 class InceptionAttentionLayer(nn.Module):
