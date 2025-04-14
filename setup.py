@@ -6,18 +6,11 @@ setup(
     # 版本号 (必需)，遵循语义化版本规范
     version='0.0.1',
 
-    # 自动查找包 (推荐)
-    packages=find_packages(
-        where="tsadlib",  # 指定查找包的根目录
-        include=['*'],  # 包含所有包
-        exclude=[],  # 排除特定包
-    ),
-
-    # 指定包目录映射 (当项目结构特殊时需要)
-    package_dir={"": "tsadlib"},  # 空字符串""表示根包
+    # 自动查找包，排除tests目录
+    packages=find_packages(exclude=['tests']),
 
     # 项目URL (推荐)
-    url='https://github.com:zenon-lzz/AnomalyDetectionLib',
+    url='https://github.com/zenon-lzz/AnomalyDetectionLib',
 
     # 许可证类型 (推荐)
     license='BSD 3-Clause',
