@@ -17,7 +17,7 @@ for time-series data. It provides a unified benchmark for implementing and evalu
 - ⚡ **Scalability**: Efficient handling of large-scale time-series datasets.
 - 📊 **Visualization**: Built-in tools for visualizing detected anomalies.
 - 🛠 **Customizable**: Easily extendable to include new detection models.
-- 📦 **Preprocessed Datasets**: Ready-to-use anomaly detection datasets:
+- 📦 **Supported Datasets**: Ready-to-use anomaly detection datasets:
   - **MBA**: MIT-BIH Supraventricular Arrhythmia ECG data
   - **MSDS**: Multi-Source Distributed System data
   - **NAB**: Numenta Anomaly Benchmark
@@ -27,24 +27,20 @@ for time-series data. It provides a unified benchmark for implementing and evalu
   - **WADI**: Water Distribution testbed data
   - **UCR**: HexagonML (UCR) dataset Time Series Data
   - **SWaT**: Secure Water Treatment data
+- 🏗 Supported Models
+  - **Statistical Methods**: None
+  - **Machine Learning**: None
+  - **Deep Learning**:
+    - [TimesNet](https://github.com/thuml/TimesNet)
+    - [MEMTO](https://github.com/gunny97/MEMTO)
+    - [MtsCID](https://github.com/ilwoof/MtsCID/)
 
 ## 🚀 Installation
 
 ```bash
 # 通过pip安装
-pip install tsadlib
-
-# 或者从源码安装
-git clone https://github.com/skyearth-lzz/AnomalyDetectionLib.git
-cd AnomalyDetectionLib
-pip install -e .
+pip install git+https://github.com/zenon-lzz/AnomalyDetectionLib.git
 ```
-
-## 🏗 Supported Models
-
-- **Statistical Methods**: Z-score, Moving Average, ARIMA
-- **Machine Learning**: Isolation Forest, One-Class SVM, Random Cut Forest
-- **Deep Learning**: LSTM-AE, GAN-based, Transformer-based approaches
 
 ## 🔧 Usage
 
