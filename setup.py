@@ -1,37 +1,30 @@
 from setuptools import setup, find_packages
 
 setup(
-    # 包名称 (必需)
     name='tsadlib',
-    # 版本号 (必需)，遵循语义化版本规范
     version='0.0.1',
-
-    # 自动查找包，排除tests目录
-    packages=find_packages(exclude=['tests']),
-
-    # 项目URL (推荐)
+    packages=find_packages(include=['tsadlib', 'tsadlib.*']),  # 明确包含所有子模块
+    package_data={
+        'tsadlib': ['**/*.py'],  # 确保包含所有Python文件
+    },
+    include_package_data=True,  # 启用包含非Python文件
     url='https://github.com/zenon-lzz/AnomalyDetectionLib',
-
-    # 许可证类型 (推荐)
     license='BSD 3-Clause',
-
-    # 作者信息 (推荐)
     author='Zenon Liu',
     author_email='2549562253@qq.com',
-
-    # 简短描述 (必需)
     description='A unified benchmark for anomaly detection models',
-
-    # 详细描述 (推荐)
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-
-    # 分类信息 (推荐)
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    ],
+    install_requires=[  # 添加必要的依赖
+        'torch>=1.8.0',
+        'numpy>=1.19.0',
+        'scikit-learn>=0.24.0',
     ],
 )
