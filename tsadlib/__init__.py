@@ -5,12 +5,12 @@
 @Description：
 ==================================================
 """
+from tsadlib.configs.log_config import logger
 from .configs import constants
 from .configs.type import ConfigType
 from .data_provider.data_factory import data_provider
 from .metrics import threshold
 from .models.TimesNet import TimesNet
-from .utils.logger import logger
 from .utils.traning_stoper import OneEarlyStopping, TwoEarlyStopping
 
 __version__ = '0.1.0'

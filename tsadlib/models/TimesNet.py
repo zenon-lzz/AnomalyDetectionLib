@@ -202,9 +202,7 @@ class TimesNet(nn.Module):
         self.configs = configs
         self.window_size = configs.window_size
         self.model = nn.ModuleList([TimesBlock(configs) for _ in range(configs.encoder_layers)])
-        self.encoder_embedding = DataEmbedding(configs.input_channels, configs.d_model, configs.embedding_type,
-                                               configs.freq,
-                                           configs.dropout)
+        self.encoder_embedding = DataEmbedding(configs.input_channels, configs.d_model, configs.dropout)
         self.layer = configs.encoder_layers
         self.layer_norm = nn.LayerNorm(configs.d_model)
         self.projection = nn.Linear(configs.d_model, configs.output_channels, bias=True)

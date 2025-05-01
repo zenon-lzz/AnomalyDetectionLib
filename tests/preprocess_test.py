@@ -6,9 +6,9 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 from tsadlib import logger
+from tsadlib.configs.constants import PROJECT_ROOT
 from tsadlib.preprocess import MBADataset, NABDataset, MSDSDataset, MSLSMAPDataset, SMDDataset, WADIDataset, UCRDataset, \
     SWaTDataset
-from tsadlib.utils.constants import PROJECT_ROOT
 
 DATASET_ROOT = '/Users/liuzhenzhou/Documents/backup/datasets/anomaly_detection'
 

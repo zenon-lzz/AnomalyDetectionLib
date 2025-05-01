@@ -11,7 +11,7 @@ import time
 import torch
 from kmeans_pytorch import kmeans
 
-from tsadlib.utils.logger import logger
+from tsadlib.configs.log_config import logger
 
 
 def k_means_clustering(x, num_clusters, d_model, device='cuda', tol=1e-3):

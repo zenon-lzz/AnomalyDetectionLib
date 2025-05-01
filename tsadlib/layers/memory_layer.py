@@ -19,7 +19,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from tsadlib.utils.logger import logger
+from tsadlib.configs.log_config import logger
 
 
 def generate_rolling_matrix(input_matrix):

@@ -96,15 +96,15 @@ def gaussian_threshold(scores: np.ndarray, confidence: float = 0.95) -> float:
 def find_best_threshold_by_f1(scores: np.ndarray, labels: np.ndarray) -> float:
     """
     Find the best threshold that maximizes F1 score
-    
+
     Args:
         scores (np.ndarray): Array of anomaly scores
         labels (np.ndarray): Array of true labels
-        
+
     Returns:
         float: Threshold value that maximizes F1 score
     """
-    # 对分数进行排序，同时记录索引以保持与标签的对应关系
+    # Sort the scores and keep the indices to maintain correspondence with labels
     sorted_indices = np.argsort(scores)
     sorted_scores = scores[sorted_indices]
 
@@ -112,18 +112,18 @@ def find_best_threshold_by_f1(scores: np.ndarray, labels: np.ndarray) -> float:
     best_threshold = sorted_scores[0]
     prev_score = None
 
-    # 遍历排序后的分数
+    # Iterate through the sorted scores
     for i, score in enumerate(sorted_scores):
-        # 如果当前分数与前一个分数相同，跳过
+        # Skip if the current score is the same as the previous one
         if score == prev_score:
             continue
 
-        # 使用当前分数作为阈值
+        # Use the current score as the threshold
         threshold = score
         pred_labels = (scores > threshold).astype(int)
         current_f1 = f1_score(labels, pred_labels, average='binary')
 
-        # 更新最佳阈值
+        # Update the best threshold if current F1 is better
         if current_f1 > best_f1:
             best_f1 = current_f1
             best_threshold = threshold

@@ -16,6 +16,7 @@ from tsadlib.configs.constants import IS_DEBUG
 
 @dataclass
 class ConfigType:
+
     """
     Configuration class for time series anomaly detection models.
     
@@ -36,7 +37,15 @@ class ConfigType:
     window_size: int = field()  # Sequence/window length for time series
 
     # Parameters that have default value
+    task_name: str = field(default='benchmarks')
+    checkpoints: str = field(default='checkpoints')
     mode: str = field(default='train')  # Model's execution status, options: ['train', 'test']
+    use_gpu: bool = field(default=True)
+    gpu_type: str = field(default='cuda')
+    use_multi_gpu: str = field(default=False)
+    gpu: int = field(default=0)
+    devices: str = field(default='')
+
 
     # Model Architecture Parameters
     dimension_fcl: int = field(default=16)  # Feed-forward layer dimension
@@ -45,12 +54,7 @@ class ConfigType:
     dataset: str = field(default='MSL')  # Dataset name (e.g., 'MSL', 'SMAP', 'SMD')
     dataset_root_path: str = field(default='data')  # Root path to dataset
     num_kernels: int = field(default=6)  # Number of convolutional kernels
-    embedding_type: str = field(default='normal')  # Type of embedding (e.g., 'timeF')
-    freq: str = field(default='h')  # freq for time features encoding,
-    # options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly],
-    # you can also use more detailed freq like 15min or 3h
-    # False: using random initialization, True: using K-Means
-    hyper_parameter_lambda: float = field(default=0.01)
+    hyper_parameter_lambda: float = field(default=0.01)  # Loss term coefficient
     n_heads: int = field(default=8)  # The number of heads in Multiple Head Attention
     num_memory: int = field(default=10)  # The number of Memory slots
     temperature: float = field(default=0.1)  # The latent space deviation hyperparameter
@@ -59,6 +63,7 @@ class ConfigType:
 
     # Training Parameters
     num_epochs: int = field(default=10)  # Number of training epochs
+    runs: int = field(default=1)
     patience: int = field(default=10)  # Patience for early stopping
     learning_rate: float = field(default=1e-4)  # Learning rate for optimizer
     end_learning_rate: float = field(default=5e-5)
