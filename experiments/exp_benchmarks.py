@@ -12,17 +12,16 @@ import warnings
 import numpy as np
 import torch
 import wandb
-from sklearn.metrics import precision_recall_fscore_support
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from experiments.exp_basic import ExperimentBase
+from tsadlib import ConfigType
 from tsadlib import logger
-from tsadlib.configs.type import ConfigType
 from tsadlib.data_provider.data_factory import data_provider
-from tsadlib.utils.adjustment import point_adjustment
+from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
 from tsadlib.utils.traning_stoper import OneEarlyStopping
 
 warnings.filterwarnings('ignore')
@@ -186,44 +185,21 @@ class BenchmarksExperiment(ExperimentBase):
         test_scores = np.concatenate(test_scores, axis=0).reshape(-1)  # [total_samples, window_size]
         test_labels = np.concatenate(test_labels, axis=0).reshape(-1)  # [total_samples, window_size]
 
-        # Calculate threshold using combined scores from both training and test sets
-        combined_scores = np.concatenate([train_scores, test_scores], axis=0)
-        from tsadlib import threshold
+        metrics = AnomalyMetrics(test_labels, test_scores)
+        result = metrics.common_metrics('percentile', args.anomaly_ratio, train_scores)
+        metrics.point_adjustment()
+        result_adjustment = metrics.common_metrics('percentile', args.anomaly_ratio, train_scores)
 
-        final_threshold = threshold.percentile_threshold(combined_scores, 100 - args.anomaly_ratio)
+        # Record evaluation metrics
+        self._record_metrics(result, result_adjustment)
 
-        # Generate predictions based on threshold
-        pred_labels = (test_scores > final_threshold).astype(int)
+        logger.success('Before point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}',
+                       result.Precision,
+                       result.Recall, result.F1_score)
 
-        # Calculate evaluation metrics
-        precision, recall, f1, _ = precision_recall_fscore_support(test_labels, pred_labels, average='binary')
-
-        # Record evaluation metrics to wandb
-        wandb.log({
-            "test/precision": precision,
-            "test/recall": recall,
-            "test/f1": f1,
-            "threshold": final_threshold
-        })
-        
-        logger.success('Before point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}', precision,
-                       recall, f1)
-
-        # Apply point-adjustment strategy
-        gt, pred = point_adjustment(test_labels, pred_labels)
-
-        # Calculate evaluation metrics
-        precision, recall, f1, _ = precision_recall_fscore_support(gt, pred, average='binary')
-
-        # 记录调整后的测试指标到wandb
-        wandb.log({
-            "test/adj_precision": precision,
-            "test/adj_recall": recall,
-            "test/adj_f1": f1
-        })
-        
-        logger.success('After point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}', precision,
-                       recall, f1)
+        logger.success('After point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}',
+                       result_adjustment.Precision,
+                       result_adjustment.Recall, result_adjustment.F1_score)
 
     def _record_loss_item(self, loss_item):
         args = self.args
@@ -242,4 +218,34 @@ class BenchmarksExperiment(ExperimentBase):
                 "epoch": epoch,
                 "train_loss": train_loss,
                 "validate_loss": validate_loss
+            })
+
+    def _record_metrics(self, result, result_adjustment):
+        args = self.args
+        if args.use_tensorboard:
+            # Record original metrics
+            self.writer.add_scalar('Metrics/Precision', result.Precision)
+            self.writer.add_scalar('Metrics/Recall', result.Recall)
+            self.writer.add_scalar('Metrics/F1_score', result.F1_score)
+            self.writer.add_scalar('Metrics/ROC_AUC', result.ROC_AUC)
+
+            # Record point-adjusted metrics
+            self.writer.add_scalar('Metrics/PA_Precision', result_adjustment.Precision)
+            self.writer.add_scalar('Metrics/PA_Recall', result_adjustment.Recall)
+            self.writer.add_scalar('Metrics/PA_F1_score', result_adjustment.F1_score)
+            self.writer.add_scalar('Metrics/PA_ROC_AUC', result_adjustment.ROC_AUC)
+
+        if args.use_wandb:
+            wandb.log({
+                # Original metrics
+                "Precision": result.Precision,
+                "Recall": result.Recall,
+                "F1_score": result.F1_score,
+                "ROC_AUC": result.ROC_AUC,
+
+                # Point-adjusted metrics
+                "PA_Precision": result_adjustment.Precision,
+                "PA_Recall": result_adjustment.Recall,
+                "PA_F1_score": result_adjustment.F1_score,
+                "PA_ROC_AUC": result_adjustment.ROC_AUC
             })

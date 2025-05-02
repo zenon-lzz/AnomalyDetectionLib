@@ -77,3 +77,24 @@ class ConfigType:
     )  # 0 in debug mode, otherwise use CPU count with max of 10
     use_tensorboard: bool = field(default=False)
     use_wandb: bool = field(default=False)
+
+
+@dataclass
+class Metric:
+    """
+    Data class for storing anomaly detection metrics results.
+    Supports partial initialization with default values.
+    """
+    # Common metrics
+    Precision: float = field(default=0.0)
+    Recall: float = field(default=0.0)
+    F1_score: float = field(default=0.0)
+    ROC_AUC: float = field(default=0.0)
+
+    # Enhanced metrics
+    Affiliation_Precision: float = field(default=0.0)
+    Affiliation_Recall: float = field(default=0.0)
+    R_AUC_ROC: float = field(default=0.0)
+    R_AUC_PR: float = field(default=0.0)
+    VUS_ROC: float = field(default=0.0)
+    VUS_PR: float = field(default=0.0)

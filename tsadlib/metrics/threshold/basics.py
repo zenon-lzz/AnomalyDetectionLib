@@ -4,18 +4,15 @@
 @Date: 2025-03-16
 @Description: Threshold Calculation Methods
     This module provides various methods for calculating
-    anomaly detection thresholds from score distributions.
+    anomaly detection thresholds.
 ==================================================
 """
-from typing import Any
-
 import numpy as np
-from numpy import floating
 from scipy import stats
 from sklearn.metrics import precision_recall_curve
 
 
-def percentile_threshold(scores: np.ndarray, percentile: float = 95) -> floating[Any]:
+def percentile_threshold(scores: np.ndarray, percentile: float = 95) -> float:
     """
     Calculate anomaly detection threshold using percentile method
     
@@ -26,7 +23,7 @@ def percentile_threshold(scores: np.ndarray, percentile: float = 95) -> floating
     Returns:
         float: Calculated threshold value
     """
-    return np.percentile(scores, percentile)
+    return float(np.percentile(scores, percentile))
 
 
 def std_threshold(scores: np.ndarray, n_sigma: float = 3.0) -> float:
@@ -93,7 +90,7 @@ def gaussian_threshold(scores: np.ndarray, confidence: float = 0.95) -> float:
     return stats.norm.ppf(confidence, mean, std)
 
 
-def get_best_f1_threshold(scores: np.ndarray, labels: np.ndarray) -> float:
+def best_f1_threshold(scores: np.ndarray, labels: np.ndarray) -> float:
     """
     Calculate the optimal threshold and corresponding metrics based on F1 score.
     

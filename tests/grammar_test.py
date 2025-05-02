@@ -7,8 +7,15 @@
 """
 import unittest
 
+from tsadlib import Metric
+
 
 class GrammarLearning(unittest.TestCase):
 
     def test_basic(self):
-        print(f'abc: {['a', 'b']}')
+        print(Metric(**{
+            'Precision': 1,
+            'Recall': 2,
+            'F1_score': 2,
+            'ROC_AUC': 4
+        }))
