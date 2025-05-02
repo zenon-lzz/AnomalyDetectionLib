@@ -134,6 +134,15 @@ if __name__ == '__main__':
     parser.add_argument('--devices', type=str, default='',
                         help="Comma-separated list of GPU device indices for multi-GPU.")
 
+    # =========================
+    # Hardware Parameters
+    # =========================
+    parser.add_argument('--use_tensorboard', type=bool, default=False,
+                        help="Whether to use Tensorboard to record metric.")
+    parser.add_argument('--use_wandb', type=bool, default=False,
+                        help="Whether to use wandb to record metric.")
+
+
     args_dict = vars(parser.parse_args())
     args = ConfigType(**args_dict)
 
@@ -143,6 +152,7 @@ if __name__ == '__main__':
         raise ValueError(f'task name \'{args.task_name}\' does not support.')
 
     for run in range(args.runs):
+
         setting = f'{args.task_name}_{args.model}_{args.dataset}_iter{run + 1}'
         exp = ExperimentClass(args)
         if args.mode == 'train':

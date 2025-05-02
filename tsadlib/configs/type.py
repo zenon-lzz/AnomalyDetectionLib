@@ -75,3 +75,5 @@ class ConfigType:
     num_workers: int = field(
         default=0 if IS_DEBUG else min(10, multiprocessing.cpu_count())
     )  # 0 in debug mode, otherwise use CPU count with max of 10
+    use_tensorboard: bool = field(default=False)
+    use_wandb: bool = field(default=False)

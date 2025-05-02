@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 from numpy import floating
 from scipy import stats
-from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_curve
 
 
 def percentile_threshold(scores: np.ndarray, percentile: float = 95) -> floating[Any]:
@@ -93,41 +93,28 @@ def gaussian_threshold(scores: np.ndarray, confidence: float = 0.95) -> float:
     return stats.norm.ppf(confidence, mean, std)
 
 
-def find_best_threshold_by_f1(scores: np.ndarray, labels: np.ndarray) -> float:
+def get_best_f1_threshold(scores: np.ndarray, labels: np.ndarray) -> float:
     """
-    Find the best threshold that maximizes F1 score
-
+    Calculate the optimal threshold and corresponding metrics based on F1 score.
+    
+    This function computes the best threshold that maximizes the F1 score, along with
+    the corresponding precision and recall values at that threshold.
+    
     Args:
-        scores (np.ndarray): Array of anomaly scores
-        labels (np.ndarray): Array of true labels
-
+        scores (np.ndarray): 
+            Predicted anomaly scores (higher values indicate higher likelihood of anomaly)
+        labels (np.ndarray): 
+            Ground truth labels (0=normal, 1=anomaly)
+            
     Returns:
-        float: Threshold value that maximizes F1 score
+        best_threshold (float): Threshold value that maximizes F1 score
     """
-    # Sort the scores and keep the indices to maintain correspondence with labels
-    sorted_indices = np.argsort(scores)
-    sorted_scores = scores[sorted_indices]
+    precision, recall, thresholds = precision_recall_curve(y_true=labels, probas_pred=scores)
+    f1_scores = 2 * precision * recall / (precision + recall + 1e-5)  # Add small epsilon to avoid division by zero
 
-    best_f1 = 0
-    best_threshold = sorted_scores[0]
-    prev_score = None
+    # Find index of maximum F1 score
+    max_f1_idx = np.argmax(f1_scores)
 
-    # Iterate through the sorted scores
-    for i, score in enumerate(sorted_scores):
-        # Skip if the current score is the same as the previous one
-        if score == prev_score:
-            continue
-
-        # Use the current score as the threshold
-        threshold = score
-        pred_labels = (scores > threshold).astype(int)
-        current_f1 = f1_score(labels, pred_labels, average='binary')
-
-        # Update the best threshold if current F1 is better
-        if current_f1 > best_f1:
-            best_f1 = current_f1
-            best_threshold = threshold
-
-        prev_score = score
-
+    best_threshold = thresholds[max_f1_idx]
+    
     return best_threshold

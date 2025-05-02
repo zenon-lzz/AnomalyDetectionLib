@@ -11,9 +11,11 @@ import warnings
 
 import numpy as np
 import torch
+import wandb
 from sklearn.metrics import precision_recall_fscore_support
 from torch import nn, optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from experiments.exp_basic import ExperimentBase
@@ -51,10 +53,24 @@ class BenchmarksExperiment(ExperimentBase):
     def _select_criterion(self):
         self.criterion = nn.MSELoss()
 
+    def _use_metric_recoder(self, setting: str):
+        if self.args.use_tensorboard:
+            self.writer = SummaryWriter()
+        if self.args.use_wandb:
+            # initialize wandb
+            self.run = wandb.init(
+                project="AnomalyDetectionBenchmarks",
+                name=setting
+            )
+        self.metric_record_flag = True
+
     def train(self, setting: str):
         args = self.args
         device = self.device
         model = self.model
+
+        self._use_metric_recoder(setting)
+
         # Load training and validating data
         train_loader, validate_loader, _ = self._get_data('train_validate_split')
 
@@ -84,7 +100,7 @@ class BenchmarksExperiment(ExperimentBase):
 
                 if (i + 1) % 100 == 0:
                     # record loss item
-                    pass
+                    self._record_loss_item(loss.item())
 
                 # Backward pass
                 loss.backward()
@@ -95,6 +111,10 @@ class BenchmarksExperiment(ExperimentBase):
 
             train_avg_loss = np.average(train_loss)
             validate_avg_loss = np.average(validate_loss)
+
+            # Record training and validating losses
+            self._record_epoch_losses(epoch, train_avg_loss, validate_avg_loss)
+            
             logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, test loss: {:>.7f}", epoch + 1,
                         time.time() - epoch_time, train_avg_loss, validate_avg_loss)
 
@@ -177,6 +197,15 @@ class BenchmarksExperiment(ExperimentBase):
 
         # Calculate evaluation metrics
         precision, recall, f1, _ = precision_recall_fscore_support(test_labels, pred_labels, average='binary')
+
+        # Record evaluation metrics to wandb
+        wandb.log({
+            "test/precision": precision,
+            "test/recall": recall,
+            "test/f1": f1,
+            "threshold": final_threshold
+        })
+        
         logger.success('Before point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}', precision,
                        recall, f1)
 
@@ -185,5 +214,32 @@ class BenchmarksExperiment(ExperimentBase):
 
         # Calculate evaluation metrics
         precision, recall, f1, _ = precision_recall_fscore_support(gt, pred, average='binary')
+
+        # 记录调整后的测试指标到wandb
+        wandb.log({
+            "test/adj_precision": precision,
+            "test/adj_recall": recall,
+            "test/adj_f1": f1
+        })
+        
         logger.success('After point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}', precision,
                        recall, f1)
+
+    def _record_loss_item(self, loss_item):
+        args = self.args
+        if args.use_tensorboard:
+            self.writer.add_scalar('loss_item', loss_item)
+        if args.use_wandb:
+            self.run.log({'loss_item': loss_item})
+
+    def _record_epoch_losses(self, epoch, train_loss, validate_loss):
+        args = self.args
+        if args.use_tensorboard:
+            self.writer.add_scalar('Loss/train', train_loss, epoch)
+            self.writer.add_scalar('Loss/validate', validate_loss, epoch)
+        if args.use_wandb:
+            wandb.log({
+                "epoch": epoch,
+                "train_loss": train_loss,
+                "validate_loss": validate_loss
+            })

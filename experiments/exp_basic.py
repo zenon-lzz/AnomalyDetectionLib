@@ -40,6 +40,7 @@ class ExperimentBase(ABC):
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
+        self.metric_record_flag = False
 
     def _acquire_device(self) -> torch.device:
         """
