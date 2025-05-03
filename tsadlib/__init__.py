@@ -7,7 +7,7 @@
 """
 from tsadlib.configs.log_config import logger
 from .configs import constants
-from .configs.type import ConfigType, Metric
+from .configs.type import *
 from .data_provider.data_factory import data_provider
 from .metrics import AnomalyMetrics
 from .models.TimesNet import TimesNet
@@ -18,6 +18,10 @@ __all__ = [
     'logger',
     'ConfigType',
     'Metric',
+    'DatasetSplitEnum',
+    'EarlyStoppingModeEnum',
+    'ValidateMetricEnum',
+    'ThresholdWayEnum',
     'data_provider',
     'OneEarlyStopping',
     'TwoEarlyStopping',

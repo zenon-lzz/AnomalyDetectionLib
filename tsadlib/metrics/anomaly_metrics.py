@@ -8,8 +8,9 @@
 ==================================================
 """
 import numpy as np
-from sklearn.metrics import roc_auc_score, precision_recall_fscore_support
+from sklearn.metrics import roc_auc_score, precision_recall_fscore_support, f1_score
 
+from tsadlib import ThresholdWayEnum
 from .affiliation.generics import convert_vector_to_events
 from .affiliation.metrics import pr_from_events
 from .threshold.basics import percentile_threshold, best_f1_threshold
@@ -27,7 +28,8 @@ class AnomalyMetrics:
         pred_labels (np.ndarray): Binary predictions after thresholding
     """
 
-    def __init__(self, labels: np.ndarray, scores: np.ndarray, threshold_way: str = 'best_f1', anomaly_rate: float = 1.,
+    def __init__(self, labels: np.ndarray, scores: np.ndarray,
+                 threshold_way: ThresholdWayEnum = ThresholdWayEnum.BEST_F1, anomaly_rate: float = 1.,
                  train_scores: np.ndarray = None):
         """
         Initialize metrics calculator with ground truth and predictions.
@@ -35,13 +37,13 @@ class AnomalyMetrics:
         Args:
             labels: Ground truth binary labels
             scores: Predicted anomaly scores (higher values indicate more anomalous)
-            threshold_way: Threshold selection method ('best_f1' or 'percentile')
+            threshold_way: Threshold selection method
             anomaly_rate: Expected anomaly rate for percentile thresholding
             train_scores: Predicted anomaly scores in training set.
         """
         self.scores = scores
         self.labels = labels
-        if threshold_way == 'percentile':
+        if threshold_way == ThresholdWayEnum.PERCENTILE:
             combined_scores = np.concatenate([train_scores, self.scores], axis=0)
             threshold = percentile_threshold(combined_scores, 100 - anomaly_rate)
         else:
@@ -125,3 +127,20 @@ class AnomalyMetrics:
                 anomaly_state = False
             if anomaly_state:
                 self.pred_labels[i] = 1
+
+    def f1_score(self) -> float:
+        """Calculate the F1 score for anomaly detection predictions.
+        
+        The F1 score is the harmonic mean of precision and recall, providing a 
+        balanced measure of model performance that considers both false positives
+        and false negatives.
+        
+        Returns:
+            float: F1 score ranging from 0 (worst) to 1 (best)
+        
+        Notes:
+            - Uses binary classification mode (anomaly=1, normal=0)
+            - Requires pred_labels to be initialized via thresholding
+            - Returns 0 if either precision or recall is 0
+        """
+        return f1_score(self.labels, self.pred_labels)

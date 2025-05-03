@@ -10,6 +10,7 @@
 """
 import multiprocessing
 from dataclasses import dataclass, field
+from enum import Enum
 
 from tsadlib.configs.constants import IS_DEBUG
 
@@ -98,3 +99,24 @@ class Metric:
     R_AUC_PR: float = field(default=0.0)
     VUS_ROC: float = field(default=0.0)
     VUS_PR: float = field(default=0.0)
+
+
+class DatasetSplitEnum(Enum):
+    TRAIN_NO_SPLIT = 'train_no_split'
+    TRAIN_VALIDATE_SPLIT = 'train_validate_split'
+    TRAIN_VALIDATE_K_SPLIT = 'train_validate_k_split'
+
+
+class EarlyStoppingModeEnum(Enum):
+    MAXIMIZE = 'maximize'
+    MINIMIZE = 'minimize'
+
+
+class ValidateMetricEnum(Enum):
+    LOSS = 'loss'
+    F1_SCORE = 'f1_score'
+
+
+class ThresholdWayEnum(Enum):
+    BEST_F1 = 'best_f1'
+    PERCENTILE = 'percentile'

@@ -2,27 +2,31 @@
 =================================================
 @Author: Zenon
 @Date: 2025-03-16
-@Description: Early Stopping Implementation
-    This module provides early stopping functionality for neural network training.
-    It monitors validation loss and stops training when no improvement is seen
-    over a specified number of epochs.
+@Description:
 ==================================================
+"""
+"""
+Early stopping utilities for neural network training.
+
+This module provides implementations of early stopping mechanisms that monitor
+validation metrics during model training and stop training when no improvement
+is observed over a specified number of epochs.
 """
 import os.path
 
 import numpy as np
 import torch
 
-from tsadlib import logger
+from tsadlib import logger, EarlyStoppingModeEnum
 
 
 class OneEarlyStopping:
-    """
-    Early stopping handler that monitors a single validation loss.
+    """Early stopping handler that monitors a single validation metric.
     
-    This class implements the early stopping mechanism to prevent overfitting
-    during neural network training. It tracks validation loss and stops training
-    when no improvement is observed for a specified number of epochs.
+    This class implements early stopping mechanism to prevent overfitting during
+    neural network training. It tracks a single metric (e.g. loss or accuracy)
+    and stops training when no improvement is observed for a specified number
+    of epochs.
     
     Attributes:
         patience (int): Number of epochs to wait after last improvement
@@ -32,20 +36,22 @@ class OneEarlyStopping:
         counter (int): Counter for epochs without improvement
         best_score (float): Best validation score seen so far
         early_stop (bool): Flag indicating whether to stop training
-        loss_min (float): Minimum validation loss observed
-        delta (float): Minimum change in loss to qualify as improvement
+        optimal_value (float): Optimal validation value observed
+        delta (float): Minimum change in metric to qualify as improvement
+        mode (EarlyStoppingModeEnum): Whether to minimize or maximize the metric
     """
 
-    def __init__(self, patience=10, root_path='checkpoints', file_name='model', verbose=True, delta=0):
-        """
-        Initialize the early stopping handler.
+    def __init__(self, patience=10, root_path='checkpoints', file_name='model',
+                 verbose=True, delta=0, mode: EarlyStoppingModeEnum = EarlyStoppingModeEnum.MINIMIZE):
+        """Initialize the early stopping handler.
         
         Args:
             patience (int): Number of epochs to wait after last improvement
             root_path (str): Directory to save model checkpoints
             file_name (str): Name of the saved model file
             verbose (bool): Whether to print progress messages
-            delta (float): Minimum change in loss to qualify as improvement
+            delta (float): Minimum change in metric to qualify as improvement
+            mode (EarlyStoppingModeEnum): Whether to minimize or maximize the metric
         """
         self.patience = patience
         self.root_path = root_path
@@ -54,28 +60,33 @@ class OneEarlyStopping:
         self.counter = 0  # Counter for epochs without improvement
         self.best_score = None  # Best validation score seen so far
         self.early_stop = False  # Signal for stopping training
-        self.loss_min = np.inf  # Minimum validation loss
         self.delta = delta  # Minimum improvement threshold
+        self.mode = mode  # Early stopping mode
+        # Optimal validation value
+        if mode == EarlyStoppingModeEnum.MINIMIZE:
+            self.optimal_value = np.inf
+        else:
+            self.optimal_value = -np.inf
 
-    def __call__(self, loss, model):
-        """
-        Check if training should be stopped based on validation loss.
-        
-        This method is called after each epoch to evaluate the validation loss
-        and determine whether to save the model or increment the early stopping counter.
+    def __call__(self, metric, model) -> bool:
+        """Check if training should be stopped based on validation metric.
         
         Args:
-            loss (float): Current validation loss
-            model (torch.nn.Module): Model to save if validation loss improves
+            metric (float): Current metric value to evaluate
+            model (torch.nn.Module): Model to save if metric improves
             
         Returns:
-            None
+            bool: True if training should be stopped, False otherwise
         """
-        score = -loss
+        if self.mode == EarlyStoppingModeEnum.MINIMIZE:
+            score = -metric
+        else:
+            score = metric
+            
         if self.best_score is None:
             # First epoch
             self.best_score = score
-            self.save_checkpoint(loss, model)
+            self.save_checkpoint(metric, model)
         elif score < self.best_score + self.delta:
             # Score didn't improve enough
             self.counter += 1
@@ -86,62 +97,38 @@ class OneEarlyStopping:
         else:
             # Score improved
             self.best_score = score
-            self.save_checkpoint(loss, model)
+            self.save_checkpoint(metric, model)
             self.counter = 0
 
-    def save_checkpoint(self, loss, model):
-        """
-        Save model checkpoint when validation loss decreases.
+        return self.early_stop
+
+    def save_checkpoint(self, metric, model):
+        """Save model checkpoint when validation metric improves.
         
         Args:
-            loss (float): Current validation loss
+            metric (float): Current metric value
             model (torch.nn.Module): Model to save
-            
-        Returns:
-            None
         """
         if self.verbose:
-            logger.info(f'Validation loss decreased ({self.loss_min:.6f} --> {loss:.6f}).  Saving model ...')
+            logger.info(
+                f'Validation Metric {"decreased" if self.mode == EarlyStoppingModeEnum.MINIMIZE else "improved"} ({self.optimal_value:.6f} --> {metric:.6f}).  Saving model ...')
 
         if not os.path.exists(self.root_path):
             os.makedirs(self.root_path)
         torch.save(model.state_dict(), os.path.join(self.root_path, f'{self.file_name}.pth'))
-        self.loss_min = loss
+        self.optimal_value = metric
 
 
 class TwoEarlyStopping:
-    """
-    Early stopping handler that monitors two validation losses.
+    """Early stopping handler that monitors two validation metrics.
     
     This class extends the early stopping concept to monitor two different
-    validation losses simultaneously. Training stops when neither loss shows
-    improvement for a specified number of epochs.
-    
-    Attributes:
-        patience (int): Number of epochs to wait after last improvement
-        root_path (str): Directory to save model checkpoints
-        file_name (str): Name of the saved model file
-        verbose (bool): Whether to print progress messages
-        counter (int): Counter for epochs without improvement
-        best_score (float): Best primary validation score seen so far
-        best_score2 (float): Best secondary validation score seen so far
-        early_stop (bool): Flag indicating whether to stop training
-        loss_min (float): Minimum primary validation loss observed
-        loss2_min (float): Minimum secondary validation loss observed
-        delta (float): Minimum change in loss to qualify as improvement
+    metrics simultaneously (e.g. loss and accuracy). Training stops when neither
+    metric shows improvement for the specified number of epochs.
     """
 
-    def __init__(self, patience=10, root_path='checkpoints', file_name='model', verbose=True, delta=0):
-        """
-        Initialize the dual-loss early stopping handler.
-        
-        Args:
-            patience (int): Number of epochs to wait after last improvement
-            root_path (str): Directory to save model checkpoints
-            file_name (str): Name of the saved model file
-            verbose (bool): Whether to print progress messages
-            delta (float): Minimum change in loss to qualify as improvement
-        """
+    def __init__(self, patience=10, root_path='checkpoints', file_name='model',
+                 verbose=True, delta=0, mode: EarlyStoppingModeEnum = EarlyStoppingModeEnum.MINIMIZE):
         self.patience = patience
         self.root_path = root_path
         self.file_name = file_name
@@ -150,32 +137,27 @@ class TwoEarlyStopping:
         self.best_score = None
         self.best_score2 = None
         self.early_stop = False
-        self.loss_min = np.inf
-        self.loss2_min = np.inf
         self.delta = delta
+        self.mode = mode
+        if mode == EarlyStoppingModeEnum.MINIMIZE:
+            self.optimal_value = np.inf
+            self.optimal_value2 = np.inf
+        else:
+            self.optimal_value = -np.inf
+            self.optimal_value2 = -np.inf
 
-    def __call__(self, loss, loss2, model):
-        """
-        Check if training should be stopped based on two validation losses.
-        
-        This method is called after each epoch to evaluate both validation losses
-        and determine whether to save the model or increment the early stopping counter.
-        Training continues if either loss improves.
-        
-        Args:
-            loss (float): Current primary validation loss
-            loss2 (float): Current secondary validation loss
-            model (torch.nn.Module): Model to save if validation losses improve
+    def __call__(self, metric, metric2, model) -> bool:
+        if self.mode == EarlyStoppingModeEnum.MINIMIZE:
+            score = -metric
+            score2 = -metric2
+        else:
+            score = metric
+            score2 = metric2
             
-        Returns:
-            None
-        """
-        score = -loss
-        score2 = -loss2
         if self.best_score is None:
             self.best_score = score
             self.best_score2 = score2
-            self.save_checkpoint(loss, loss2, model)
+            self.save_checkpoint(metric, metric2, model)
         elif score < self.best_score + self.delta or score2 < self.best_score2 + self.delta:
             self.counter += 1
             if self.verbose:
@@ -185,25 +167,17 @@ class TwoEarlyStopping:
         else:
             self.best_score = score
             self.best_score2 = score2
-            self.save_checkpoint(loss, loss2, model)
+            self.save_checkpoint(metric, metric2, model)
             self.counter = 0
 
-    def save_checkpoint(self, loss, loss2, model):
-        """
-        Save model checkpoint when validation losses decrease.
-        
-        Args:
-            loss (float): Current primary validation loss
-            loss2 (float): Current secondary validation loss
-            model (torch.nn.Module): Model to save
-            
-        Returns:
-            None
-        """
+        return self.early_stop
+
+    def save_checkpoint(self, metric, metric2, model):
         if self.verbose:
-            logger.info(f'Validation loss decreased ({self.loss_min:.6f} --> {loss:.6f}).  Saving model ...')
+            logger.info(
+                f'Validation Metric {'decreased' if self.mode == EarlyStoppingModeEnum.MINIMIZE else 'improved'} ({self.optimal_value:.6f} --> {metric:.6f}).  Saving model ...')
         if not os.path.exists(self.root_path):
             os.makedirs(self.root_path)
         torch.save(model.state_dict(), os.path.join(self.root_path, f'{self.file_name}.pth'))
-        self.loss_min = loss
-        self.loss2_min = loss2
+        self.optimal_value = metric
+        self.optimal_value2 = metric2

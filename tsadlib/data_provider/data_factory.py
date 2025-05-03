@@ -13,7 +13,7 @@ from typing import Any
 import torch
 from torch.utils.data import DataLoader, Subset
 
-from tsadlib.configs.type import ConfigType
+from tsadlib.configs.type import ConfigType, DatasetSplitEnum
 from .datasets.msl import MSLDataset
 from .datasets.nips_ts import NIPSTSWaterDataset, NIPSTSSwanDataset, NIPSTSCCardDataset
 from .datasets.psm import PSMDataset
@@ -37,8 +37,9 @@ dataset_dict = {
 }
 
 
-def data_provider(args: ConfigType, split_way: str = 'train_no_split', validate_proportion=0.2, k_proportion=0.1) -> \
-tuple[DataLoader[Any] | None, ...]:
+def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEnum.TRAIN_NO_SPLIT,
+                  validate_proportion=0.2, k_proportion=0.1) -> \
+        tuple[DataLoader[Any] | None, ...]:
     """
     Factory function that provides data loaders for time series anomaly detection datasets.
     
@@ -67,16 +68,16 @@ tuple[DataLoader[Any] | None, ...]:
     root_path = os.path.join(args.dataset_root_path, args.dataset)
 
     # Create test dataset and dataloader
-    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size,
+    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_size,
                                  mode='test')
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=args.num_workers)
 
     # Create training dataset
-    train_dataset = dataset_class(root_path=root_path, win_size=args.window_size,
+    train_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_size,
                                   mode='train')
     train_length = len(train_dataset)
 
-    if split_way == 'train_validate_split':
+    if split_way == DatasetSplitEnum.TRAIN_VALIDATE_SPLIT:
         # Split training data into training and validation sets
         indices = torch.arange(train_length)
         validate_start_index = int(train_length * (1 - validate_proportion))
@@ -91,7 +92,7 @@ tuple[DataLoader[Any] | None, ...]:
 
         return train_dataloader, validate_dataloader, test_dataloader
 
-    elif split_way == 'train_validate_k_split':
+    elif split_way == DatasetSplitEnum.TRAIN_VALIDATE_K_SPLIT:
         # Split for few-shot learning scenario with train, validation, and k-subset
         indices = torch.arange(train_length)
         validate_start_index = int(train_length * (1 - validate_proportion))
