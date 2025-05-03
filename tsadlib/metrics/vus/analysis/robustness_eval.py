@@ -9,7 +9,7 @@ module_path = os.path.abspath(os.path.join('../..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from metrics.vus.utils.metrics import metricor
+from ..utils.metrics import metricor
 
 
 def generate_new_label(label, lag):

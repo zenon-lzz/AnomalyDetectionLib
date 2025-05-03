@@ -27,27 +27,31 @@ class AnomalyMetrics:
         pred_labels (np.ndarray): Binary predictions after thresholding
     """
 
-    def __init__(self, labels: np.ndarray, scores: np.ndarray):
+    def __init__(self, labels: np.ndarray, scores: np.ndarray, threshold_way: str = 'best_f1', anomaly_rate: float = 1.,
+                 train_scores: np.ndarray = None):
         """
         Initialize metrics calculator with ground truth and predictions.
         
         Args:
             labels: Ground truth binary labels
             scores: Predicted anomaly scores (higher values indicate more anomalous)
-        """
-        self.pred_labels = None
-        self.scores = scores
-        self.labels = labels
-
-    def common_metrics(self, threshold_way: str = 'best_f1', anomaly_rate: float = 1.,
-                       train_scores: np.ndarray = None) -> Metric:
-        """
-        Calculate basic anomaly detection metrics.
-        
-        Args:
             threshold_way: Threshold selection method ('best_f1' or 'percentile')
             anomaly_rate: Expected anomaly rate for percentile thresholding
             train_scores: Predicted anomaly scores in training set.
+        """
+        self.scores = scores
+        self.labels = labels
+        if threshold_way == 'percentile':
+            combined_scores = np.concatenate([train_scores, self.scores], axis=0)
+            threshold = percentile_threshold(combined_scores, 100 - anomaly_rate)
+        else:
+            threshold = best_f1_threshold(self.scores, self.labels)
+
+        self.pred_labels = (self.scores > threshold).astype(int)
+
+    def common_metrics(self) -> Metric:
+        """
+        Calculate basic anomaly detection metrics.
 
         Returns:
             Dictionary containing:
@@ -56,13 +60,6 @@ class AnomalyMetrics:
             - F1_score: Harmonic mean of precision and recall
             - ROC_AUC: Area under ROC curve
         """
-        if threshold_way == 'percentile':
-            combined_scores = np.concatenate([train_scores, self.scores], axis=0)
-            threshold = percentile_threshold(combined_scores, 100 - anomaly_rate)
-        else:
-            threshold = best_f1_threshold(self.scores, self.labels)
-
-        self.pred_labels = (self.scores > threshold).astype(int)
         precision, recall, f1, _ = precision_recall_fscore_support(
             self.labels, self.pred_labels, average='binary')
 

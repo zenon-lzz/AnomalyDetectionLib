@@ -5,7 +5,6 @@
 @Description: This file defines the abstract base class for anomaly detection experiments, providing the basic structure for model, data, and experiment workflow management.
 ==================================================
 """
-import os
 from abc import ABC, abstractmethod
 
 import torch
@@ -52,16 +51,17 @@ class ExperimentBase(ABC):
         """
         if self.args.use_gpu:
             if self.args.gpu_type == 'cuda':
-                visible_devices = str(self.args.gpu) if not self.args.use_multi_gpu else self.args.devices
-                os.environ["CUDA_VISIBLE_DEVICES"] = visible_devices
-                device = torch.device(f'cuda:{visible_devices}')
-                logger.info(f'Use GPU: cuda:{visible_devices}')
+                device = torch.device(f'cuda:{self.args.gpu}')
+                logger.info(f'Use GPU: cuda:{self.args.gpu}')
             elif self.args.gpu_type == 'mps':
                 device = torch.device('mps')
                 logger.info('Use GPU: mps')
+            else:
+                device = torch.device('cpu')
+                logger.warning(f'{self.args.gpu_type} is not supported.')
         else:
             device = torch.device('cpu')
-            logger.warning('Use CPU to train')
+            logger.info('Use CPU to train')
         return device
 
     @abstractmethod

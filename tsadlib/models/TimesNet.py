@@ -234,7 +234,7 @@ class TimesNet(nn.Module):
         x /= std_deviation
 
         # embedding
-        enc_out = self.encoder_embedding(x, None)  # [B,T,C]
+        enc_out = self.encoder_embedding(x)  # [B,T,C]
         # TimesNet
         for i in range(self.layer):
             enc_out = self.layer_norm(self.model[i](enc_out))

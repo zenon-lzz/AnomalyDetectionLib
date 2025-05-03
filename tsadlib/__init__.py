@@ -9,7 +9,7 @@ from tsadlib.configs.log_config import logger
 from .configs import constants
 from .configs.type import ConfigType, Metric
 from .data_provider.data_factory import data_provider
-from .metrics import threshold
+from .metrics import AnomalyMetrics
 from .models.TimesNet import TimesNet
 from .utils.traning_stoper import OneEarlyStopping, TwoEarlyStopping
 
@@ -22,6 +22,6 @@ __all__ = [
     'OneEarlyStopping',
     'TwoEarlyStopping',
     'TimesNet',
-    'threshold',
+    'AnomalyMetrics',
     'constants'
 ]

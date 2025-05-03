@@ -127,19 +127,15 @@ if __name__ == '__main__':
                         help="Whether to use GPU for training/testing.")
     parser.add_argument('--gpu_type', type=str, default='cuda',
                         help="Type of GPU to use: 'cuda' or 'mps'.")
-    parser.add_argument('--use_multi_gpu', type=bool, default=False,
-                        help="Whether to use multiple GPUs.")
     parser.add_argument('--gpu', type=int, default=0,
                         help="GPU device index to use.")
-    parser.add_argument('--devices', type=str, default='',
-                        help="Comma-separated list of GPU device indices for multi-GPU.")
 
     # =========================
-    # Hardware Parameters
+    # Other Parameters
     # =========================
-    parser.add_argument('--use_tensorboard', type=bool, default=False,
+    parser.add_argument('--use_tensorboard', default=False, action='store_true',
                         help="Whether to use Tensorboard to record metric.")
-    parser.add_argument('--use_wandb', type=bool, default=False,
+    parser.add_argument('--use_wandb', default=False, action='store_true',
                         help="Whether to use wandb to record metric.")
 
 
@@ -171,3 +167,4 @@ if __name__ == '__main__':
             logger.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
 
         empty_gpu_cache()
+        exp.finish()

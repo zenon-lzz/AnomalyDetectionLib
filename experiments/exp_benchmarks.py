@@ -113,13 +113,14 @@ class BenchmarksExperiment(ExperimentBase):
 
             # Record training and validating losses
             self._record_epoch_losses(epoch, train_avg_loss, validate_avg_loss)
-            
-            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, test loss: {:>.7f}", epoch + 1,
+
+            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate loss: {:>.7f}", epoch + 1,
                         time.time() - epoch_time, train_avg_loss, validate_avg_loss)
 
             # Early stopping check
-            if early_stopping(float(validate_avg_loss), model):
-                logger.info("Early stopping triggered")
+            early_stopping(float(validate_avg_loss), model)
+            if early_stopping.early_stop:
+                logger.warning("Early stopping triggered")
                 break
 
     def validate(self, dataloader: DataLoader):
@@ -185,21 +186,25 @@ class BenchmarksExperiment(ExperimentBase):
         test_scores = np.concatenate(test_scores, axis=0).reshape(-1)  # [total_samples, window_size]
         test_labels = np.concatenate(test_labels, axis=0).reshape(-1)  # [total_samples, window_size]
 
-        metrics = AnomalyMetrics(test_labels, test_scores)
-        result = metrics.common_metrics('percentile', args.anomaly_ratio, train_scores)
+        metrics = AnomalyMetrics(test_labels, test_scores, 'percentile', args.anomaly_ratio, train_scores)
         metrics.point_adjustment()
-        result_adjustment = metrics.common_metrics('percentile', args.anomaly_ratio, train_scores)
+        result = metrics.common_metrics()
 
         # Record evaluation metrics
-        self._record_metrics(result, result_adjustment)
+        self._record_metrics(result)
 
-        logger.success('Before point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}',
+        logger.success('Result:\nPrecision: {:.2f}\nRecall: {:.2f}\nF1-score: {:.2f}',
                        result.Precision,
                        result.Recall, result.F1_score)
 
-        logger.success('After point-adjustment:\nPrecision: {:.2f}\nRecall: {:.4f}\nF1-score: {:.2f}',
-                       result_adjustment.Precision,
-                       result_adjustment.Recall, result_adjustment.F1_score)
+    def finish(self):
+        args = self.args
+        if self.metric_record_flag:
+            if args.use_tensorboard:
+                self.writer.close()
+            if args.use_wandb:
+                self.run.finish()
+
 
     def _record_loss_item(self, loss_item):
         args = self.args
@@ -211,41 +216,27 @@ class BenchmarksExperiment(ExperimentBase):
     def _record_epoch_losses(self, epoch, train_loss, validate_loss):
         args = self.args
         if args.use_tensorboard:
-            self.writer.add_scalar('Loss/train', train_loss, epoch)
-            self.writer.add_scalar('Loss/validate', validate_loss, epoch)
+            self.writer.add_scalar('Loss/train', train_loss)
+            self.writer.add_scalar('Loss/validate', validate_loss)
         if args.use_wandb:
-            wandb.log({
-                "epoch": epoch,
+            self.run.log({
+                'epoch': epoch,
                 "train_loss": train_loss,
                 "validate_loss": validate_loss
             })
 
-    def _record_metrics(self, result, result_adjustment):
+    def _record_metrics(self, result):
         args = self.args
         if args.use_tensorboard:
-            # Record original metrics
-            self.writer.add_scalar('Metrics/Precision', result.Precision)
-            self.writer.add_scalar('Metrics/Recall', result.Recall)
-            self.writer.add_scalar('Metrics/F1_score', result.F1_score)
-            self.writer.add_scalar('Metrics/ROC_AUC', result.ROC_AUC)
-
-            # Record point-adjusted metrics
-            self.writer.add_scalar('Metrics/PA_Precision', result_adjustment.Precision)
-            self.writer.add_scalar('Metrics/PA_Recall', result_adjustment.Recall)
-            self.writer.add_scalar('Metrics/PA_F1_score', result_adjustment.F1_score)
-            self.writer.add_scalar('Metrics/PA_ROC_AUC', result_adjustment.ROC_AUC)
+            self.writer.add_scalar('Metrics/Precision', result.Precision, 0)
+            self.writer.add_scalar('Metrics/Recall', result.Recall, 0)
+            self.writer.add_scalar('Metrics/F1_score', result.F1_score, 0)
+            self.writer.add_scalar('Metrics/ROC_AUC', result.ROC_AUC, 0)
 
         if args.use_wandb:
-            wandb.log({
-                # Original metrics
+            self.run.summary.update({
                 "Precision": result.Precision,
                 "Recall": result.Recall,
                 "F1_score": result.F1_score,
-                "ROC_AUC": result.ROC_AUC,
-
-                # Point-adjusted metrics
-                "PA_Precision": result_adjustment.Precision,
-                "PA_Recall": result_adjustment.Recall,
-                "PA_F1_score": result_adjustment.F1_score,
-                "PA_ROC_AUC": result_adjustment.ROC_AUC
+                "ROC_AUC": result.ROC_AUC
             })

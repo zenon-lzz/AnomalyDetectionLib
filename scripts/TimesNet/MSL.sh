@@ -1,1 +1,1 @@
-python run.py --task_name benchmarks --model TimesNet --mode train dataset MSL --dataset_root_path /home --batch_size 128 --d_model 8 --input_channels 55 --output_channels 55
+python run.py --task_name benchmarks --model TimesNet --mode train --dataset MSL --dataset_root_path /home/lzz/Desktop/datasets/ad --batch_size 128 --d_model 8 --input_channels 55 --output_channels 55 --use_wandb
