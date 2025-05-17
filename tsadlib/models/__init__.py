@@ -5,9 +5,9 @@
 @Description: Initializes the models package and imports anomaly detection models for easy access.
 ==================================================
 """
-from .MEMTO import MEMTO
-from .MtsCID import MtsCID
-from .TimesNet import TimesNet
+from .memto import MEMTO
+from .mtscid import MtsCID
+from .timesnet import TimesNet
 
 __all__ = [
     'TimesNet',

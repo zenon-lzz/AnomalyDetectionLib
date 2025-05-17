@@ -1,0 +1,1 @@
+python run.py --task_name benchmarks --model MtsCID --mode train --dataset MSL --dataset_root_path /home/lzz/Desktop/datasets/ad --batch_size 64 --d_model 55 --input_channels 55 --output_channels 55 --hyper_parameter_lambda 1

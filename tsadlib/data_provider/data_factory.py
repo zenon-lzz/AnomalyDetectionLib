@@ -49,9 +49,10 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
     Args:
         args (ConfigType): Configuration parameters containing dataset, paths, and loader settings
         split_way (str): Strategy for splitting the dataset:
-            - 'train_no_split': No validation set, only train and test
-            - 'train_validate_split': Split training data into train and validation sets
-            - 'train_validate_k_split': Split into train, validation, and k-subset (for few-shot learning)
+            - 'TRAIN_NO_SPLIT': No validation set, only train and test
+            - 'TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES': Select the data with a final proportion of 'validate_proportion' in the training set as the validation set
+            - 'TRAIN_VALIDATE_SPLIT': Split training data into train and validation sets
+            - 'TRAIN_VALIDATE_K_SPLIT': Split into train, validation, and k-subset (for few-shot learning)
         validate_proportion (float): Proportion of training data to use for validation (default: 0.2)
         k_proportion (float): Proportion of data to use for k-subset in few-shot learning (default: 0.1)
         
@@ -77,7 +78,20 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
                                   mode='train')
     train_length = len(train_dataset)
 
-    if split_way == DatasetSplitEnum.TRAIN_VALIDATE_SPLIT:
+    if split_way == DatasetSplitEnum.TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES:
+        # Select the data with a final proportion of 'validate_proportion' in the training set as the validation set
+        indices = torch.arange(train_length)
+        validate_start_index = int(train_length * (1 - validate_proportion))
+
+        # Create subsets for training and validation
+        validate_subset = Subset(train_dataset, indices[validate_start_index:])
+
+        # Create data loaders for training and validation
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+        validate_dataloader = DataLoader(validate_subset, batch_size=batch_size, num_workers=args.num_workers)
+
+        return train_dataloader, validate_dataloader, test_dataloader
+    elif split_way == DatasetSplitEnum.TRAIN_VALIDATE_SPLIT:
         # Split training data into training and validation sets
         indices = torch.arange(train_length)
         validate_start_index = int(train_length * (1 - validate_proportion))
@@ -113,7 +127,7 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
                                   num_workers=args.num_workers, drop_last=True)
 
         return train_dataloader, validate_dataloader, test_dataloader, k_dataloader
-    
+
     else:
         # Default case: no validation split, just training and testing
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=args.num_workers,

@@ -23,8 +23,6 @@ from tsadlib import logger
 from tsadlib.data_provider.data_factory import data_provider
 from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
 from tsadlib.utils.traning_stoper import OneEarlyStopping
-from utils.loss import EntropyLoss
-from utils.lr_decay import PolynomialDecayLR
 
 warnings.filterwarnings('ignore')
 
@@ -48,19 +46,11 @@ class BenchmarksExperiment(ExperimentBase):
         return data_provider(self.args, split_way)
 
     def _select_optimizer(self):
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate,
-                                     weight_decay=self.args.weight_decay)
-
-    def _select_scheduler(self):
-        args = self.args
-        self.scheduler = PolynomialDecayLR(self.optimizer, warmup_steps=args.warmup_epoch * self.args.batch_size,
-                                           total_steps=args.num_epochs * args.batch_size,
-                                           lr=args.learning_rate, end_lr=args.end_learning_rate,
-                                           power=1.0)
+        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        return model_optim
 
     def _select_criterion(self):
-        self.criterion = nn.MSELoss(reduction='none')
-        self.entropy_criterion = EntropyLoss()
+        self.criterion = nn.MSELoss()
 
     def _use_metric_recoder(self, setting: str):
         if self.args.use_tensorboard:
@@ -81,40 +71,32 @@ class BenchmarksExperiment(ExperimentBase):
         self._use_metric_recoder(setting)
 
         # Load training and validating data
-        train_loader, validate_loader = self._get_data(DatasetSplitEnum.TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES)
+        train_loader, validate_loader = self._get_data(DatasetSplitEnum.TRAIN_NO_SPLIT)
 
         if not os.path.exists(args.checkpoints):
             os.makedirs(args.checkpoints)
 
         early_stopping = OneEarlyStopping(patience=args.patience, root_path=args.checkpoints, file_name=setting,
-                                          mode=EarlyStoppingModeEnum.MINIMIZE)
+                                          mode=EarlyStoppingModeEnum.MAXIMIZE)
 
+        optimizer = self._select_optimizer()
         self._select_criterion()
         criterion = self.criterion
-        entropy_criterion = self.entropy_criterion
-
-        self._select_optimizer()
-        optimizer = self.optimizer
-        self._select_scheduler()
-
 
         for epoch in range(args.num_epochs):
-            train_losses = []
+            train_loss = []
 
             model.train()
             epoch_time = time.time()
 
-            for i, (x_data, _) in enumerate(tqdm(train_loader, desc=f'Epoch {epoch + 1:>3} / {args.num_epochs:>3}',
+            for i, (batch_x, _) in enumerate(tqdm(train_loader, desc=f'Epoch {epoch + 1:>3} / {args.num_epochs:>3}',
                                                   ncols=100, colour='green')):
                 optimizer.zero_grad()
-                x_data = x_data.float().to(device)
+                batch_x = batch_x.float().to(device)
 
                 # Forward pass
-                output_dict = model(x_data)
-                output, attention = output_dict['output'], output_dict['attention']
-                reconstruct_loss = criterion(output, x_data).mean()
-                entropy_loss = entropy_criterion(attention)
-                loss = reconstruct_loss + entropy_loss * args.hyper_parameter_lambda
+                outputs = model(batch_x)
+                loss = criterion(outputs, batch_x)
 
                 if (i + 1) % 100 == 0:
                     # record loss item
@@ -123,11 +105,11 @@ class BenchmarksExperiment(ExperimentBase):
                 # Backward pass
                 loss.backward()
                 optimizer.step()
-                train_losses.append(loss.item())
+                train_loss.append(loss.item())
 
-            f1_score = self.validate(validate_loader, train_loader, ValidateMetricEnum.LOSS)
+            f1_score = self.validate(validate_loader, train_loader, ValidateMetricEnum.F1_SCORE)
 
-            train_avg_loss = np.average(train_losses)
+            train_avg_loss = np.average(train_loss)
 
             # Record training and validating losses
             self._record_epoch(epoch, train_avg_loss, f1_score)
@@ -148,19 +130,51 @@ class BenchmarksExperiment(ExperimentBase):
         model.eval()
         if validate_metric == ValidateMetricEnum.LOSS:
             losses = []
+            criterion = self.criterion
             with torch.no_grad():
-                for i, (x_data, _) in enumerate(dataloader):
-                    x_data = x_data.float().to(device)
-                    # Forward pass
-                    output_dict = model(x_data)
-                    output, attention = output_dict['output'], output_dict['attention']
-                    reconstruct_loss = self.criterion(output, x_data).mean()
-                    entropy_loss = self.entropy_criterion(attention)
-                    loss = reconstruct_loss + self.args.hyper_parameter_lambda * entropy_loss
+                for i, (batch_x, _) in enumerate(dataloader):
+                    batch_x = batch_x.float().to(device)
+                    outputs = model(batch_x)
+                    loss = criterion(outputs, batch_x)
                     losses.append(loss.item())
             return np.average(losses)
         else:
-            pass
+            train_scores = []
+            test_scores = []
+            test_labels = []
+            anomaly_criterion = nn.MSELoss(reduction='none')
+
+            # Calculate reconstruction scores for training data
+            with torch.no_grad():
+                for i, (batch_x, batch_y) in enumerate(train_loader):
+                    batch_x = batch_x.float().to(device)
+                    # reconstruction
+                    outputs = model(batch_x)
+                    # criterion
+                    score = torch.mean(anomaly_criterion(batch_x, outputs), dim=-1)
+                    score = score.detach().cpu().numpy()
+                    train_scores.append(score)
+
+            train_scores = np.concatenate(train_scores, axis=0).reshape(-1)
+
+            # Calculate reconstruction scores for test data
+            for batch_x, batch_y in dataloader:
+                batch_x = batch_x.float().to(device)
+                outputs = model(batch_x)
+
+                # Calculate reconstruction error as anomaly score
+                score = torch.mean(anomaly_criterion(outputs, batch_x), dim=-1)
+                test_scores.append(score.detach().cpu().numpy())
+                test_labels.append(batch_y)
+
+            # Combine scores and labels from all batches
+            test_scores = np.concatenate(test_scores, axis=0).reshape(-1)  # [total_samples, window_size]
+            test_labels = np.concatenate(test_labels, axis=0).reshape(-1)  # [total_samples, window_size]
+
+            metrics = AnomalyMetrics(test_labels, test_scores, ThresholdWayEnum.PERCENTILE, self.args.anomaly_ratio,
+                                     train_scores)
+            # metrics.point_adjustment()
+            return metrics.f1_score()
 
     def test(self, setting: str):
         args = self.args
@@ -186,24 +200,24 @@ class BenchmarksExperiment(ExperimentBase):
 
         # Calculate reconstruction scores for training data
         with torch.no_grad():
-            for i, (x_data, batch_y) in enumerate(train_loader):
-                x_data = x_data.float().to(device)
+            for i, (batch_x, batch_y) in enumerate(train_loader):
+                batch_x = batch_x.float().to(device)
                 # reconstruction
-                outputs = model(x_data)
+                outputs = model(batch_x)
                 # criterion
-                score = torch.mean(anomaly_criterion(x_data, outputs), dim=-1)
+                score = torch.mean(anomaly_criterion(batch_x, outputs), dim=-1)
                 score = score.detach().cpu().numpy()
                 train_scores.append(score)
 
         train_scores = np.concatenate(train_scores, axis=0).reshape(-1)
 
         # Calculate reconstruction scores for test data
-        for x_data, batch_y in test_loader:
-            x_data = x_data.float().to(device)
-            outputs = model(x_data)
+        for batch_x, batch_y in test_loader:
+            batch_x = batch_x.float().to(device)
+            outputs = model(batch_x)
 
             # Calculate reconstruction error as anomaly score
-            score = torch.mean(anomaly_criterion(outputs, x_data), dim=-1)
+            score = torch.mean(anomaly_criterion(outputs, batch_x), dim=-1)
             test_scores.append(score.detach().cpu().numpy())
             test_labels.append(batch_y)
 
@@ -230,7 +244,6 @@ class BenchmarksExperiment(ExperimentBase):
                 self.writer.close()
             if args.use_wandb:
                 self.run.finish()
-
 
     def _record_loss_item(self, loss_item):
         args = self.args

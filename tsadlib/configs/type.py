@@ -104,6 +104,7 @@ class Metric:
 class DatasetSplitEnum(Enum):
     TRAIN_NO_SPLIT = 'train_no_split'
     TRAIN_VALIDATE_SPLIT = 'train_validate_split'
+    TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES = 'train_validate_split_with_duplicates'
     TRAIN_VALIDATE_K_SPLIT = 'train_validate_k_split'
 
 

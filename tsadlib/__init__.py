@@ -10,7 +10,7 @@ from .configs import constants
 from .configs.type import *
 from .data_provider.data_factory import data_provider
 from .metrics import AnomalyMetrics
-from .models.TimesNet import TimesNet
+from .models.timesnet import TimesNet
 from .utils.traning_stoper import OneEarlyStopping, TwoEarlyStopping
 
 __version__ = '0.1.0'
