@@ -129,7 +129,7 @@ class GatheringLoss(nn.Module):
         return gathering_loss
 
 
-def harmonic_loss_compute(t_loss: torch.Tensor,
+def harmonic_loss(t_loss: torch.Tensor,
                           f_loss: torch.Tensor,
                           operator: str = 'mean') -> torch.Tensor:
     """Compute harmonic loss combining time and frequency domain losses.

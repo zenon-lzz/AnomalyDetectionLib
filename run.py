@@ -10,6 +10,7 @@ import random
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 
 from experiments.exp_benchmarks import BenchmarksExperiment
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     else:
         raise ValueError(f'task name \'{args.task_name}\' does not support.')
 
+    metrics = []
     for run in range(args.runs):
 
         setting = f'{args.task_name}_{args.model}_{args.dataset}_iter{run + 1}'
@@ -163,8 +165,14 @@ if __name__ == '__main__':
         else:
             logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
             start_time = time.time()
-            exp.test(setting)
+            result = exp.test(setting)
+            metrics.append(result)
             logger.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
+
 
         empty_gpu_cache()
         exp.finish()
+
+    df = pd.DataFrame(metrics)
+    logger.info('All running result:\n{:s}', df.to_string())
+    logger.success('Average running result:\n{:s}', df.mean().round(2).to_string())

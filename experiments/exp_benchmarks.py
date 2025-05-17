@@ -2,7 +2,7 @@
 =================================================
 @Author: Zenon
 @Date: 2025-05-01
-@Description：
+@Description：Benchmarks Experiment for Various Models
 ==================================================
 """
 import os.path
@@ -22,9 +22,9 @@ from tsadlib import ConfigType, DatasetSplitEnum, ValidateMetricEnum, EarlyStopp
 from tsadlib import logger
 from tsadlib.data_provider.data_factory import data_provider
 from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
+from tsadlib.utils.learning_rate_decay import PolynomialDecayLR
+from tsadlib.utils.loss import EntropyLoss, GatheringLoss, harmonic_loss
 from tsadlib.utils.traning_stoper import OneEarlyStopping
-from utils.loss import EntropyLoss
-from utils.lr_decay import PolynomialDecayLR
 
 warnings.filterwarnings('ignore')
 
@@ -182,30 +182,35 @@ class BenchmarksExperiment(ExperimentBase):
         train_scores = []
         test_scores = []
         test_labels = []
-        anomaly_criterion = nn.MSELoss(reduction='none')
+        gathering_loss = GatheringLoss(reduce=False)
 
         # Calculate reconstruction scores for training data
         with torch.no_grad():
-            for i, (x_data, batch_y) in enumerate(train_loader):
+            for i, (x_data, _) in enumerate(train_loader):
                 x_data = x_data.float().to(device)
-                # reconstruction
-                outputs = model(x_data)
-                # criterion
-                score = torch.mean(anomaly_criterion(x_data, outputs), dim=-1)
-                score = score.detach().cpu().numpy()
-                train_scores.append(score)
+                output_dict = model(x_data)
+                output, queries, memory = output_dict['output'], output_dict['queries'], output_dict['memory']
+
+                # calculate loss and anomaly scores
+                reconstruct_loss = self.criterion(x_data, output)
+                latent_score = torch.softmax(gathering_loss(queries, memory) / args.temperature, dim=-1)
+                loss = harmonic_loss(reconstruct_loss, latent_score, 'normal_mean')
+                train_scores.append(loss.detach().cpu().numpy())
 
         train_scores = np.concatenate(train_scores, axis=0).reshape(-1)
 
         # Calculate reconstruction scores for test data
-        for x_data, batch_y in test_loader:
+        for x_data, y_data in test_loader:
             x_data = x_data.float().to(device)
-            outputs = model(x_data)
+            output_dict = model(x_data)
+            output, queries, memory = output_dict['output'], output_dict['queries'], output_dict['memory']
 
-            # Calculate reconstruction error as anomaly score
-            score = torch.mean(anomaly_criterion(outputs, x_data), dim=-1)
-            test_scores.append(score.detach().cpu().numpy())
-            test_labels.append(batch_y)
+            # calculate loss and anomaly scores
+            reconstruct_loss = self.criterion(x_data, output)
+            latent_score = torch.softmax(gathering_loss(queries, memory) / args.temperature, dim=-1)
+            loss = harmonic_loss(reconstruct_loss, latent_score, 'normal_mean')
+            test_scores.append(loss.detach().cpu().numpy())
+            test_labels.append(y_data)
 
         # Combine scores and labels from all batches
         test_scores = np.concatenate(test_scores, axis=0).reshape(-1)  # [total_samples, window_size]
@@ -219,9 +224,7 @@ class BenchmarksExperiment(ExperimentBase):
         # Record evaluation metrics
         self._record_metrics(result)
 
-        logger.success('Result:\nPrecision: {:.2f}\nRecall: {:.2f}\nF1-score: {:.2f}',
-                       result.Precision,
-                       result.Recall, result.F1_score)
+        return result
 
     def finish(self):
         args = self.args
