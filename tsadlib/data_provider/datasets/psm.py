@@ -9,6 +9,7 @@
 """
 import os
 
+import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
@@ -46,6 +47,7 @@ class PSMDataset(BaseDataset):
 
         # Load and preprocess training data
         train_data = pd.read_csv(os.path.join(root_path, 'train.csv')).values[:, 1:]
+        train_data = np.nan_to_num(train_data)
         self.scaler = StandardScaler()
         self.scaler.fit(train_data)  # Fit scaler only on training data
         data = self.scaler.transform(train_data)
@@ -54,8 +56,9 @@ class PSMDataset(BaseDataset):
             self.train = data  # Store normalized training data
         elif mode == 'test':
             # Load and normalize test data
-            test_data = pd.read_csv(os.path.join(root_path, 'test.csv'))
-            self.test = self.scaler.transform(test_data.values[:, 1:])
+            test_data = pd.read_csv(os.path.join(root_path, 'test.csv')).values[:, 1:]
+            test_data = np.nan_to_num(test_data)
+            self.test = self.scaler.transform(test_data)
 
             # Load test labels (Note: Fixed typo from .cvs to .csv)
             self.test_labels = pd.read_csv(

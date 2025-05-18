@@ -11,16 +11,11 @@ import unittest
 class GrammarLearning(unittest.TestCase):
 
     def test_basic(self):
-        import pandas as pd
+        from datetime import datetime
 
-        # 示例：字典数组
-        data = [
-            {"Name": 1, "Age": 25, "City": 4},
-            {"Name": 2, "Age": 30, "City": 5},
-            {"Name": 3, "Age": 22, "City": 6}
-        ]
+        # 获取当前日期和时间
+        now = datetime.now()
 
-        # 转换为 DataFrame 并打印
-        df = pd.DataFrame(data)
-        print(df)
-        print(df.mean().round(2).to_string())
+        # 格式化输出
+        formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"当前日期时间: {formatted_date}")

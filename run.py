@@ -6,8 +6,10 @@
 ==================================================
 """
 import argparse
+import os.path
 import random
 import time
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -16,6 +18,7 @@ import torch
 from experiments.exp_benchmarks import BenchmarksExperiment
 from tsadlib import constants, logger
 from tsadlib.configs.type import ConfigType
+from tsadlib.utils.files import write_to_csv
 from tsadlib.utils.gpu import empty_gpu_cache
 
 if __name__ == '__main__':
@@ -180,3 +183,8 @@ if __name__ == '__main__':
         f'\n----------------------{args.model} Evaluation Results in {args.dataset} Dataset-----------------------')
     logger.success('All running result:\n{:s}', df.to_string())
     logger.success('Average running result:\n{:s}', df.mean().round(4).to_string())
+    result_path = os.path.join('results', args.model, f'{args.dataset}.csv')
+    write_to_csv(result_path,
+                 f'-----------------------{args.model} Evaluation Results in {args.dataset} Dataset at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}-----------------------')
+    write_to_csv(result_path, df)
+    write_to_csv(result_path, f'Average running result:\n{df.mean().round(4).to_string()}')
