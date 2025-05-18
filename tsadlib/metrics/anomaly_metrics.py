@@ -69,7 +69,7 @@ class AnomalyMetrics:
             'Precision': precision,
             'Recall': recall,
             'F1_score': f1,
-            'ROC_AUC': roc_auc_score(self.labels, self.scores)
+            'ROC_AUC': roc_auc_score(self.labels, self.pred_labels)
         })
 
     def enhanced_metrics(self) -> Metric:
@@ -92,7 +92,14 @@ class AnomalyMetrics:
         affiliation = pr_from_events(events_pred, events_gt, Trange)
         vus_results = get_range_vus_roc(self.scores, self.labels, 100)
 
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            self.labels, self.pred_labels, average='binary')
+
         return Metric(**{
+            'Precision': precision,
+            'Recall': recall,
+            'F1_score': f1,
+            'ROC_AUC': roc_auc_score(self.labels, self.pred_labels),
             'Affiliation_Precision': affiliation['Affiliation_Precision'],
             'Affiliation_Recall': affiliation['Affiliation_Recall'],
             'R_AUC_ROC': vus_results["R_AUC_ROC"],

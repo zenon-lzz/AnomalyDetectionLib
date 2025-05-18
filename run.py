@@ -106,7 +106,7 @@ if __name__ == '__main__':
     # =========================
     parser.add_argument('--num_epochs', type=int, default=100,
                         help="Number of training epochs.")
-    parser.add_argument('--runs', type=int, default=1,
+    parser.add_argument('--runs', type=int, default=5,
                         help="Number of training runs.")
     parser.add_argument('--patience', type=int, default=10,
                         help="Patience for early stopping.")
@@ -160,7 +160,8 @@ if __name__ == '__main__':
             logger.info(f'Training costs time: {time.time() - start_time:10.2}s.')
             logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
             start_time = time.time()
-            exp.test(setting)
+            result = exp.test(setting)
+            metrics.append(result)
             logger.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
         else:
             logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
@@ -173,6 +174,9 @@ if __name__ == '__main__':
         empty_gpu_cache()
         exp.finish()
 
+
     df = pd.DataFrame(metrics)
-    logger.info('All running result:\n{:s}', df.to_string())
-    logger.success('Average running result:\n{:s}', df.mean().round(2).to_string())
+    logger.info(
+        f'\n----------------------{args.model} Evaluation Results in {args.dataset} Dataset-----------------------')
+    logger.success('All running result:\n{:s}', df.to_string())
+    logger.success('Average running result:\n{:s}', df.mean().round(4).to_string())

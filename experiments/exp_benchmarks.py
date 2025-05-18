@@ -33,7 +33,7 @@ class BenchmarksExperiment(ExperimentBase):
 
     def __init__(self, args: ConfigType):
         super().__init__(args)
-        args.checkpoints = os.path.join(args.checkpoints, args.model, args.dataset)
+        self.checkpoints = os.path.join(args.checkpoints, args.model, args.dataset)
 
     def _build_model(self):
         model = self.model_dict[self.args.model](self.args)
@@ -81,12 +81,12 @@ class BenchmarksExperiment(ExperimentBase):
         self._use_metric_recoder(setting)
 
         # Load training and validating data
-        train_loader, validate_loader = self._get_data(DatasetSplitEnum.TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES)
+        train_loader, validate_loader, _ = self._get_data(DatasetSplitEnum.TRAIN_VALIDATE_SPLIT_WITH_DUPLICATES)
 
-        if not os.path.exists(args.checkpoints):
-            os.makedirs(args.checkpoints)
+        if not os.path.exists(self.checkpoints):
+            os.makedirs(self.checkpoints)
 
-        early_stopping = OneEarlyStopping(patience=args.patience, root_path=args.checkpoints, file_name=setting,
+        early_stopping = OneEarlyStopping(patience=args.patience, root_path=self.checkpoints, file_name=setting,
                                           mode=EarlyStoppingModeEnum.MINIMIZE)
 
         self._select_criterion()
@@ -125,19 +125,19 @@ class BenchmarksExperiment(ExperimentBase):
                 optimizer.step()
                 train_losses.append(loss.item())
 
-            f1_score = self.validate(validate_loader, train_loader, ValidateMetricEnum.LOSS)
+            validate_metric = self.validate(validate_loader, train_loader, ValidateMetricEnum.LOSS)
 
             train_avg_loss = np.average(train_losses)
 
             # Record training and validating losses
-            self._record_epoch(epoch, train_avg_loss, f1_score)
+            self._record_epoch(epoch, train_avg_loss, validate_metric)
 
-            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate f1-score: {:>.7f}",
+            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate metric: {:>.7f}",
                         epoch + 1,
-                        time.time() - epoch_time, train_avg_loss, f1_score)
+                        time.time() - epoch_time, train_avg_loss, validate_metric)
 
             # Early stopping check
-            if early_stopping(float(f1_score), model):
+            if early_stopping(float(validate_metric), model):
                 logger.warning("Early stopping triggered")
                 break
 
@@ -168,12 +168,12 @@ class BenchmarksExperiment(ExperimentBase):
         device = self.device
         train_loader, test_loader = self._get_data(DatasetSplitEnum.TRAIN_NO_SPLIT)
 
-        file_path = os.path.join(args.checkpoints, f'{setting}.pth')
+        file_path = os.path.join(self.checkpoints, f'{setting}.pth')
         if os.path.exists(file_path):
             logger.info('Loading model weights.')
             model.load_state_dict(torch.load(file_path, map_location=self.device))
         else:
-            msg = f"Model weights file {setting}.pth not found in {args.checkpoints}"
+            msg = f"Model weights file {setting}.pth not found in {self.checkpoints}"
             logger.error(msg)
             raise FileNotFoundError(msg)
 
@@ -219,7 +219,7 @@ class BenchmarksExperiment(ExperimentBase):
         metrics = AnomalyMetrics(test_labels, test_scores, ThresholdWayEnum.PERCENTILE, args.anomaly_ratio,
                                  train_scores)
         metrics.point_adjustment()
-        result = metrics.common_metrics()
+        result = metrics.enhanced_metrics()
 
         # Record evaluation metrics
         self._record_metrics(result)
