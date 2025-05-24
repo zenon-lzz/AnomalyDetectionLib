@@ -1,0 +1,1 @@
+python run.py --task_name benchmarks --model MtsCID --mode train --dataset SWaT --dataset_root_path /home/lzz/Desktop/datasets/ad --batch_size 64 --d_model 51 --input_channels 51 --output_channels 51 --hyper_parameter_lambda 1 --anomaly_ratio 0.1

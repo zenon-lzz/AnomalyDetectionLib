@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # =========================
     parser.add_argument('--num_epochs', type=int, default=100,
                         help="Number of training epochs.")
-    parser.add_argument('--runs', type=int, default=5,
+    parser.add_argument('--runs', type=int, default=1,
                         help="Number of training runs.")
     parser.add_argument('--patience', type=int, default=10,
                         help="Patience for early stopping.")

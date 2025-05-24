@@ -85,7 +85,7 @@ class NIPSTSSwanDataset(BaseDataset):
             self.test_labels = np.load(os.path.join(root_path, 'NIPS_TS_Swan_test_label.npy'))
 
 
-class NIPSTSCCardDataset(BaseDataset):
+class NIPSTSCreditcardDataset(BaseDataset):
     """Synthetic credit card transaction data loader.
     
     See NIPSTSWaterDataset for full parameter and attribute documentation.  

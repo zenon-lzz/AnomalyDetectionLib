@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Subset
 
 from tsadlib.configs.type import ConfigType, DatasetSplitEnum
 from .datasets.msl import MSLDataset
-from .datasets.nips_ts import NIPSTSWaterDataset, NIPSTSSwanDataset, NIPSTSCCardDataset
+from .datasets.nips_ts import NIPSTSWaterDataset, NIPSTSSwanDataset, NIPSTSCreditcardDataset
 from .datasets.psm import PSMDataset
 from .datasets.smap import SMAPDataset
 from .datasets.smd import SMDDataset
@@ -33,7 +33,7 @@ dataset_dict = {
     'WADI': WADIDataset,
     'NIPS_TS_Water': NIPSTSWaterDataset,
     'NIPS_TS_Swan': NIPSTSSwanDataset,
-    'NIPS_TS_CCard': NIPSTSCCardDataset
+    'NIPS_TS_Creditcard': NIPSTSCreditcardDataset
 }
 
 
