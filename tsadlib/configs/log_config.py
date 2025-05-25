@@ -82,7 +82,7 @@ class LoggerSetup:
 
 
 def configure_global_logger(log_dir_base: Optional[str] = None, log_level: Optional[str] = None,
-                            comment: Optional[str] = None):
+                            comment: Optional[str] = None) -> '_LoggerType':
     """
     Sets the global configuration for the logger. 
     This function should be called BEFORE the first call to `get_logger` or before importing `logger` 
@@ -108,6 +108,8 @@ def configure_global_logger(log_dir_base: Optional[str] = None, log_level: Optio
     if comment is not None:
         _global_logger_config["comment"] = comment
 
+    return LoggerSetup.get_logger()
+
 
 # Export the logger instance directly. It will be configured on first use.
 log: '_LoggerType' = LoggerSetup.get_logger()
@@ -119,12 +121,8 @@ if __name__ == '__main__':
     # Simulate another module configuring the logger before use
     # In a real scenario, this would be in a different file, called before `logger` is first used.
     print("\nConfiguring logger with custom settings...")
-    configure_global_logger(log_level="DEBUG", comment="_custom_run")
+    log = configure_global_logger(log_level="DEBUG", comment="_custom_run")
 
-    # Since 'logger' was already obtained above, to see the change, we'd need to get it again
-    # or ensure configure_global_logger is called truly before any access.
-    # For this example, let's re-fetch it (in real app, structure imports to ensure config happens first)
-    log = LoggerSetup.get_logger()
     log.debug(
         "This is a debug message using custom config. Log file will be in custom_logs and have _custom_run suffix.")
     log.info("Info message from custom_logger.")
