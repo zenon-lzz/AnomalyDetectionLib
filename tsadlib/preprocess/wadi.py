@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
-from tsadlib import logger
+from tsadlib import log
 from .base import BaseDataset
 from ..plotting import LinePlot
 
@@ -52,7 +52,7 @@ class WADIDataset(BaseDataset):
         if not os.path.exists(train_file):
             raise FileNotFoundError(f"Training data file not found at {train_file}")
 
-        logger.info("Loading training data...")
+        log.info("Loading training data...")
         self.train_data = pd.read_csv(train_file, skiprows=1000, nrows=int(2e5))
 
         # Load test data and attack labels
@@ -62,7 +62,7 @@ class WADIDataset(BaseDataset):
         if not all(os.path.exists(f) for f in [test_file, labels_file]):
             raise FileNotFoundError(f"Test or labels file not found in {self.data_dir}")
 
-        logger.info("Loading test data and attack labels...")
+        log.info("Loading test data and attack labels...")
         self.test_data = pd.read_csv(test_file)
         self.attack_labels = pd.read_csv(labels_file)
 
@@ -121,10 +121,10 @@ class WADIDataset(BaseDataset):
 
     def preprocess(self) -> None:
         """Preprocess WADI dataset with normalization."""
-        logger.info("Preprocessing WADI data...")
+        log.info("Preprocessing WADI data...")
 
         if self.train_data is None or self.test_data is None:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         # Convert to numpy arrays

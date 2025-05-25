@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 from experiments.exp_basic import ExperimentBase
 from tsadlib import ConfigType, DatasetSplitEnum, ValidateMetricEnum, EarlyStoppingModeEnum, ThresholdWayEnum
-from tsadlib import logger
 from tsadlib.data_provider.data_factory import data_provider
 from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
 from tsadlib.utils.traning_stoper import OneEarlyStopping

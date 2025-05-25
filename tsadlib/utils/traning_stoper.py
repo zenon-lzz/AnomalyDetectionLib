@@ -17,7 +17,7 @@ import os.path
 import numpy as np
 import torch
 
-from tsadlib import logger, EarlyStoppingModeEnum
+from tsadlib import log, EarlyStoppingModeEnum
 
 
 class OneEarlyStopping:
@@ -91,7 +91,7 @@ class OneEarlyStopping:
             # Score didn't improve enough
             self.counter += 1
             if self.verbose:
-                logger.warning(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+                log.warning(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -110,7 +110,7 @@ class OneEarlyStopping:
             model (torch.nn.Module): Model to save
         """
         if self.verbose:
-            logger.info(
+            log.info(
                 f'Validation Metric {"decreased" if self.mode == EarlyStoppingModeEnum.MINIMIZE else "improved"} ({self.optimal_value:.6f} --> {metric:.6f}).  Saving model ...')
 
         if not os.path.exists(self.root_path):
@@ -161,7 +161,7 @@ class TwoEarlyStopping:
         elif score < self.best_score + self.delta or score2 < self.best_score2 + self.delta:
             self.counter += 1
             if self.verbose:
-                logger.warning(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+                log.warning(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -174,7 +174,7 @@ class TwoEarlyStopping:
 
     def save_checkpoint(self, metric, metric2, model):
         if self.verbose:
-            logger.info(
+            log.info(
                 f'Validation Metric {'decreased' if self.mode == EarlyStoppingModeEnum.MINIMIZE else 'improved'} ({self.optimal_value:.6f} --> {metric:.6f}).  Saving model ...')
         if not os.path.exists(self.root_path):
             os.makedirs(self.root_path)

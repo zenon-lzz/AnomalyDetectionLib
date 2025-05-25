@@ -11,7 +11,7 @@ from typing import Tuple, Dict
 
 import numpy as np
 
-from tsadlib import logger
+from tsadlib import log
 
 
 class BaseDataset(ABC):
@@ -61,12 +61,12 @@ class BaseDataset(ABC):
     def save(self, ) -> None:
         """Save the processed data to numpy files in save_dir."""
         if self.save_dir is None:
-            logger.error("The save_dir is not specified, operation is skipped.")
+            log.error("The save_dir is not specified, operation is skipped.")
             return
 
         self._save_as_npy()
 
-        logger.info(f"Data has been saved to {self.save_dir}")
+        log.info(f"Data has been saved to {self.save_dir}")
 
     def _save_as_npy(self) -> None:
         """Internal method to save data as numpy files."""
@@ -87,7 +87,7 @@ class BaseDataset(ABC):
         
         This method can be implemented by child classes for dataset-specific visualization.
         """
-        logger.warning("Visualization not implemented in base class. Please implement in child class.")
+        log.warning("Visualization not implemented in base class. Please implement in child class.")
 
     def get_statistics(self) -> Dict:
         """Get statistical information about the dataset.
@@ -97,5 +97,5 @@ class BaseDataset(ABC):
         Returns:
             dict: An empty dictionary in base class
         """
-        logger.warning("Statistics not implemented in base class. Please implement in child class.")
+        log.warning("Statistics not implemented in base class. Please implement in child class.")
         return {}

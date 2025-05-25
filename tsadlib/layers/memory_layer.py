@@ -19,7 +19,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from tsadlib.configs.log_config import logger
+from tsadlib.configs.log_config import log
 
 
 def generate_rolling_matrix(input_matrix):
@@ -163,12 +163,12 @@ class MemoryLayer(nn.Module):
 
         if memory_init_embedding is None:
             # Initialize memory with random values for first training phase
-            logger.info('loading memory item with random initialization (for first train phase)')
+            log.info('loading memory item with random initialization (for first train phase)')
             # Normalize memory embeddings along feature dimension
             self.memory = F.normalize(torch.rand((self.num_memory, self.feature_dimension), dtype=torch.float), dim=1)
         else:
             # Use pre-trained memory for continued training or testing
-            logger.info('loading memory item with first train\'s result (for second train or test phase)')
+            log.info('loading memory item with first train\'s result (for second train or test phase)')
             self.memory = memory_init_embedding
 
     def get_attention_score(self, query, key):

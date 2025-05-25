@@ -5,7 +5,7 @@
 @Description：
 ==================================================
 """
-from tsadlib.configs.log_config import logger
+from tsadlib.configs.log_config import log
 from .configs import constants
 from .configs.type import *
 from .data_provider.data_factory import data_provider
@@ -15,7 +15,7 @@ from .utils.traning_stoper import OneEarlyStopping, TwoEarlyStopping
 
 __version__ = '0.1.0'
 __all__ = [
-    'logger',
+    'log',
     'ConfigType',
     'Metric',
     'DatasetSplitEnum',

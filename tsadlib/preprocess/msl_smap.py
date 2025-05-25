@@ -14,7 +14,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
-from tsadlib import logger
+from tsadlib import log
 from tsadlib.utils.scaler import minmax_scaler_column_wise
 from .base import BaseDataset
 from ..plotting import LinePlot
@@ -59,10 +59,10 @@ class MSLSMAPDataset(BaseDataset):
             test_file = os.path.join(self.data_dir, 'test', f'{channel_id}.npy')
 
             if not all(os.path.exists(f) for f in [train_file, test_file]):
-                logger.warning(f"Data files not found for channel {channel_id}")
+                log.warning(f"Data files not found for channel {channel_id}")
                 continue
 
-            logger.info(f"Loading data from channel {channel_id}")
+            log.info(f"Loading data from channel {channel_id}")
             self.train_data[channel_id] = np.load(train_file)
             self.test_data[channel_id] = np.load(test_file)
 
@@ -84,10 +84,10 @@ class MSLSMAPDataset(BaseDataset):
 
     def preprocess(self, is_normalize: bool = True) -> None:
         """Preprocess MSL/SMAP dataset with normalization."""
-        logger.info(f"Preprocessing {self.spacecraft} data...")
+        log.info(f"Preprocessing {self.spacecraft} data...")
 
         if not self.train_data:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         self.train = {}

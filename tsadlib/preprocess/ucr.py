@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from matplotlib.figure import Figure
 
-from tsadlib import logger
+from tsadlib import log
 from .base import BaseDataset
 from ..plotting import LinePlot
 
@@ -77,7 +77,7 @@ class UCRDataset(BaseDataset):
             if dataset_num not in self.dataset_ids:
                 self.dataset_ids.append(dataset_num)
 
-            logger.info(f"Processing dataset {dataset_num} from {filename}")
+            log.info(f"Processing dataset {dataset_num} from {filename}")
 
             # Load and normalize data
             data = self._load_and_normalize(file_path)
@@ -100,7 +100,7 @@ class UCRDataset(BaseDataset):
         
         Note: Data is already normalized during loading, so is_normalize is ignored.
         """
-        logger.info("Preprocessing UCR data...")
+        log.info("Preprocessing UCR data...")
 
         if not self.train_data:
             logger.error("Data not loaded yet, please call load_data() first")

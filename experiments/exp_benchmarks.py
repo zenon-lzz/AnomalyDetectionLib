@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from experiments.exp_basic import ExperimentBase
 from tsadlib import ConfigType, DatasetSplitEnum, ValidateMetricEnum, EarlyStoppingModeEnum, ThresholdWayEnum
-from tsadlib import logger
+from tsadlib import log
 from tsadlib.data_provider.data_factory import data_provider
 from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
 from tsadlib.utils.learning_rate_decay import PolynomialDecayLR
@@ -132,13 +132,13 @@ class BenchmarksExperiment(ExperimentBase):
             # Record training and validating losses
             self._record_epoch(epoch, train_avg_loss, validate_metric)
 
-            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate metric: {:>.7f}",
+            log.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate metric: {:>.7f}",
                         epoch + 1,
                         time.time() - epoch_time, train_avg_loss, validate_metric)
 
             # Early stopping check
             if early_stopping(float(validate_metric), model):
-                logger.warning("Early stopping triggered")
+                log.warning("Early stopping triggered")
                 break
 
     def validate(self, dataloader: DataLoader, train_loader=None,
@@ -170,7 +170,7 @@ class BenchmarksExperiment(ExperimentBase):
 
         file_path = os.path.join(self.checkpoints, f'{setting}.pth')
         if os.path.exists(file_path):
-            logger.info('Loading model weights.')
+            log.info('Loading model weights.')
             model.load_state_dict(torch.load(file_path, map_location=self.device))
         else:
             msg = f"Model weights file {setting}.pth not found in {self.checkpoints}"

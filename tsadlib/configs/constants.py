@@ -5,13 +5,19 @@
 @Description：constants definition
 ==================================================
 """
+import datetime
 import os
 import sys
 
-FIX_SEED = 2025
+# =================================================
+# Global Constants
+# =================================================
+FIX_SEED = datetime.datetime.now().year  # Dynamically get current year as seed
 
+# =================================================
+# Dataset Constants
 # Project root directory (2 levels up from the current file)
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+LIBRARY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # The types of tasks supported by tasdlib
 TASK_OPTIONS = [

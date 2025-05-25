@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
-from tsadlib import logger
+from tsadlib import log
 from tsadlib.configs.type import ConfigType
 from tsadlib.models import *
 
@@ -52,16 +52,16 @@ class ExperimentBase(ABC):
         if self.args.use_gpu:
             if self.args.gpu_type == 'cuda':
                 device = torch.device(f'cuda:{self.args.gpu}')
-                logger.info(f'Use GPU: cuda:{self.args.gpu}')
+                log.info(f'Use GPU: cuda:{self.args.gpu}')
             elif self.args.gpu_type == 'mps':
                 device = torch.device('mps')
-                logger.info('Use GPU: mps')
+                log.info('Use GPU: mps')
             else:
                 device = torch.device('cpu')
-                logger.warning(f'{self.args.gpu_type} is not supported.')
+                log.warning(f'{self.args.gpu_type} is not supported.')
         else:
             device = torch.device('cpu')
-            logger.info('Use CPU to train')
+            log.info('Use CPU to train')
         return device
 
     @abstractmethod

@@ -11,7 +11,7 @@ import time
 import torch
 from kmeans_pytorch import kmeans
 
-from tsadlib.configs.log_config import logger
+from tsadlib import log
 
 
 def k_means_clustering(x, num_clusters, d_model, device='cuda', tol=1e-3):
@@ -31,7 +31,7 @@ def k_means_clustering(x, num_clusters, d_model, device='cuda', tol=1e-3):
     start = time.time()
     # Reshape input to 2D tensor [N, d_model]
     x = x.view([-1, d_model])
-    logger.info(f'Running K-Means Clustering with {num_clusters} clusters')
+    log.info(f'Running K-Means Clustering with {num_clusters} clusters')
 
     # Perform K-Means clustering
     _, cluster_centers = kmeans(
@@ -42,5 +42,5 @@ def k_means_clustering(x, num_clusters, d_model, device='cuda', tol=1e-3):
         tol=tol
     )
 
-    logger.info('K-Means clustering completed in {:.2f}s'.format(time.time() - start))
+    log.info('K-Means clustering completed in {:.2f}s'.format(time.time() - start))
     return cluster_centers

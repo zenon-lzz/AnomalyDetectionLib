@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from matplotlib.figure import Figure
 
-from tsadlib import logger
+from tsadlib import log
 from tsadlib.utils.scaler import minmax_scaler_column_wise
 from .base import BaseDataset
 from ..plotting import LinePlot
@@ -47,7 +47,7 @@ class SMDDataset(BaseDataset):
         """
         file_path = os.path.join(self.data_dir, category, filename)
         data = np.genfromtxt(file_path, dtype=np.float64, delimiter=',')
-        logger.info(f"Loaded {category} data from {filename}: shape {data.shape}")
+        log.info(f"Loaded {category} data from {filename}: shape {data.shape}")
         return data
 
     def _load_labels(self, filename: str, data_shape: Tuple[int, int]) -> np.ndarray:
@@ -72,7 +72,7 @@ class SMDDataset(BaseDataset):
             indices = [int(i) - 1 for i in values]
             labels[start - 1:end - 1, indices] = 1
 
-        logger.info(f"Processed labels for {filename}: shape {labels.shape}")
+        log.info(f"Processed labels for {filename}: shape {labels.shape}")
         return labels
 
     def load_data(self) -> None:
@@ -100,10 +100,10 @@ class SMDDataset(BaseDataset):
 
     def preprocess(self, is_normalize: bool = True) -> None:
         """Preprocess SMD dataset with normalization."""
-        logger.info("Preprocessing SMD data...")
+        log.info("Preprocessing SMD data...")
 
         if not self.train_data:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         self.train = {}
@@ -124,7 +124,7 @@ class SMDDataset(BaseDataset):
             self.test[machine_id] = test_data
             self.labels[machine_id] = self.labels_data[machine_id]
 
-        logger.info("SMD data preprocessing completed")
+        log.info("SMD data preprocessing completed")
 
     def save(self) -> None:
         """Save processed data for each machine separately."""

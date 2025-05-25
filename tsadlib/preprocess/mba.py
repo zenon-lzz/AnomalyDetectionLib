@@ -14,7 +14,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
-from tsadlib import logger
+from tsadlib import log
 from .base import BaseDataset
 from ..plotting import LinePlot
 from ..utils.scaler import minmax_scaler_column_wise
@@ -70,10 +70,10 @@ class MBADataset(BaseDataset):
         Args:
             is_normalize: Whether to apply min-max normalization. Defaults to True.
         """
-        logger.info("Preprocessing MBA data...")
+        log.info("Preprocessing MBA data...")
 
         if self.train_data is None:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         # Extract numerical data, skipping first row/column
@@ -82,7 +82,7 @@ class MBADataset(BaseDataset):
 
         # Normalize data using min-max scaling
         if is_normalize:
-            logger.info("Normalizing data using min-max strategy")
+            log.info("Normalizing data using min-max strategy")
             train, min_a, max_a = minmax_scaler_column_wise(train)
             test, _, _ = minmax_scaler_column_wise(test, min_a, max_a)
 
@@ -96,7 +96,7 @@ class MBADataset(BaseDataset):
         self.train = train
         self.test = test
         self.labels = labels
-        logger.info("MBA data preprocessing completed")
+        log.info("MBA data preprocessing completed")
 
     def visualize(self) -> List[Figure]:
         """Visualize the MBA dataset.
@@ -112,12 +112,12 @@ class MBADataset(BaseDataset):
         # x_data = self.train_data.to_numpy()[1:, 0][100:1000].astype(int)
         x_data = None
         # Plot training set
-        logger.info('Plotting time series for each dimension of MBA training set')
+        log.info('Plotting time series for each dimension of MBA training set')
         train_data = self.train_data.to_numpy()[1:, 1:]
         figures.append(LinePlot.plot_time_series(train_data, x_data=x_data, column_names=columns, title='Training set'))
 
         # Plot test set with anomaly labels
-        logger.info('Plotting time series for each dimension of MBA test set with anomaly labels')
+        log.info('Plotting time series for each dimension of MBA test set with anomaly labels')
         test_data = self.test_data.to_numpy()[1:, 1:]
         labels_data = np.zeros(len(test_data))
         labels_data[self.labels_data.to_numpy()[:, 1].astype(int)] = 1
@@ -139,7 +139,7 @@ class MBADataset(BaseDataset):
                 - Total number of anomaly samples
         """
         if self.train is None or self.test is None:
-            logger.error("Data not loaded yet")
+            log.error("Data not loaded yet")
             return {}
 
         stats = {

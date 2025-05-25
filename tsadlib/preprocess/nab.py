@@ -16,7 +16,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
-from tsadlib import logger
+from tsadlib import log
 from .base import BaseDataset
 from ..plotting import LinePlot
 
@@ -49,7 +49,7 @@ class NABDataset(BaseDataset):
                 continue
 
             file_path = os.path.join(self.data_dir, filename)
-            logger.info(f"Loading data from {filename}")
+            log.info(f"Loading data from {filename}")
 
             df = pd.read_csv(file_path)
             filename = filename.replace('.csv', '')
@@ -72,10 +72,10 @@ class NABDataset(BaseDataset):
 
     def preprocess(self, is_normalize: bool = True) -> None:
         """Preprocess NAB dataset with normalization."""
-        logger.info("Preprocessing NAB data...")
+        log.info("Preprocessing NAB data...")
 
         if not self.train_data:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         self.train = {}
@@ -102,12 +102,12 @@ class NABDataset(BaseDataset):
             self.test[filename] = test_data
             self.labels[filename] = labels
 
-        logger.info("NAB data preprocessing completed")
+        log.info("NAB data preprocessing completed")
 
     def save(self) -> None:
         """Save processed data for each file separately."""
         if self.save_dir is None:
-            logger.error("The save_dir is not specified, operation is skipped.")
+            log.error("The save_dir is not specified, operation is skipped.")
             return
 
         os.makedirs(self.save_dir, exist_ok=True)
@@ -117,7 +117,7 @@ class NABDataset(BaseDataset):
             np.save(os.path.join(self.save_dir, f'{filename}_test.npy'), self.test[filename])
             np.save(os.path.join(self.save_dir, f'{filename}_labels.npy'), self.labels[filename])
 
-        logger.info(f"Data has been saved to {self.save_dir}")
+        log.info(f"Data has been saved to {self.save_dir}")
 
     def visualize(self) -> List[Figure]:
         """Visualize each time series in the NAB dataset."""

@@ -50,7 +50,11 @@ class ConfigType:
 
     # Model Architecture Parameters
     dimension_fcl: int = field(default=16)  # Feed-forward layer dimension
+    temporal_dimension_fcl: int = field(default=16)  # temporal transformer fcl layer layer dimension
+    spatio_dimension_fcl: int = field(default=16)  # spatio transformer fcl layer layer dimension
     encoder_layers: int = field(default=1)  # Number of encoder layers
+    temporal_encoder_layers: int = field(default=1)  # Number of temporal encoder layers
+    spatio_encoder_layers: int = field(default=1)  # Number of spatial encoder layers
     top_k: int = field(default=3)  # Top k time-frequency combinations (TimesNet)
     dataset: str = field(default='MSL')  # Dataset name (e.g., 'MSL', 'SMAP', 'SMD')
     dataset_root_path: str = field(default='data')  # Root path to dataset

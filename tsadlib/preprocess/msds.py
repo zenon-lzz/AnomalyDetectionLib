@@ -16,7 +16,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from pandas.core.frame import DataFrame
 
-from tsadlib import logger
+from tsadlib import log
 from tsadlib.utils.scaler import minmax_scaler_column_wise
 from .base import BaseDataset
 from ..plotting import LinePlot
@@ -46,10 +46,10 @@ class MSDSDataset(BaseDataset):
 
     def preprocess(self,
                    is_normalize: bool = True) -> None:
-        logger.info("Preprocessing MSDS data...")
+        log.info("Preprocessing MSDS data...")
 
         if self.train_data is None:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         # Extract numerical data, skipping first row/column
@@ -58,7 +58,7 @@ class MSDSDataset(BaseDataset):
 
         # Normalize data using min-max scaling
         if is_normalize:
-            logger.info("Normalizing data using min-max strategy")
+            log.info("Normalizing data using min-max strategy")
             _, min_a, max_a = minmax_scaler_column_wise(np.concatenate((train, test), axis=0))
             train, _, _ = minmax_scaler_column_wise(train, min_a, max_a)
             test, _, _ = minmax_scaler_column_wise(test, min_a, max_a)
@@ -68,7 +68,7 @@ class MSDSDataset(BaseDataset):
         self.train = train
         self.test = test
         self.labels = labels
-        logger.info("MSDS data preprocessing completed")
+        log.info("MSDS data preprocessing completed")
 
     def visualize(self) -> List[Figure]:
         columns = self.train_data.columns[1:]
@@ -76,12 +76,12 @@ class MSDSDataset(BaseDataset):
         # x_data = self.train_data.to_numpy()[::5, 1:][100:1000]
         x_data = None
         # Plot training set
-        logger.info('Plotting time series for each dimension of MSDS training set')
+        log.info('Plotting time series for each dimension of MSDS training set')
         train_data = self.train_data.to_numpy()[::5, 1:]
         figures.append(LinePlot.plot_time_series(train_data, x_data=x_data, column_names=columns, title='Training set'))
 
         # Plot test set with anomaly labels
-        logger.info('Plotting time series for each dimension of MSDS test set with anomaly labels')
+        log.info('Plotting time series for each dimension of MSDS test set with anomaly labels')
         test_data = self.test_data.to_numpy()[::5, 1:]
         labels_data = self.labels_data.to_numpy()[::1, 1:]
         figures.append(LinePlot.plot_time_series(test_data, x_data=x_data, column_names=columns,

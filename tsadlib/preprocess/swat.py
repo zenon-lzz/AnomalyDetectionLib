@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
-from tsadlib import logger
+from tsadlib import log
 from .base import BaseDataset
 from ..plotting import LinePlot
 from ..utils.scaler import minmax_scaler_global
@@ -41,7 +41,7 @@ class SWaTDataset(BaseDataset):
         if not os.path.exists(json_file):
             raise FileNotFoundError(f"Data file not found at {json_file}")
 
-        logger.info("Loading SWaT data from JSON file...")
+        log.info("Loading SWaT data from JSON file...")
         df = pd.read_json(json_file, lines=True)
 
         # Extract training and test data
@@ -51,10 +51,10 @@ class SWaTDataset(BaseDataset):
 
     def preprocess(self, is_normalize: bool = True) -> None:
         """Preprocess SWaT dataset with normalization."""
-        logger.info("Preprocessing SWaT data...")
+        log.info("Preprocessing SWaT data...")
 
         if self.train_data is None or self.test_data is None:
-            logger.error("Data not loaded yet, please call load_data() first")
+            log.error("Data not loaded yet, please call load_data() first")
             return
 
         # Convert to numpy arrays
@@ -73,14 +73,14 @@ class SWaTDataset(BaseDataset):
         self.test = test
         self.labels = labels
 
-        logger.info("SWaT data preprocessing completed")
+        log.info("SWaT data preprocessing completed")
 
     def visualize(self) -> List[Figure]:
         """Visualize the time series data."""
         figures = []
 
         if self.train is None or self.test is None:
-            logger.error("Data not processed yet")
+            log.error("Data not processed yet")
             return figures
 
         # Create visualization for training data
@@ -103,7 +103,7 @@ class SWaTDataset(BaseDataset):
     def get_statistics(self) -> Dict:
         """Get dataset statistics."""
         if self.train is None or self.test is None:
-            logger.error("Data not processed yet")
+            log.error("Data not processed yet")
             return {}
 
         stats = {

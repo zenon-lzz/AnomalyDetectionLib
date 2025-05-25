@@ -16,7 +16,7 @@ import pandas as pd
 import torch
 
 from experiments.exp_benchmarks import BenchmarksExperiment
-from tsadlib import constants, logger
+from tsadlib import constants, log
 from tsadlib.configs.type import ConfigType
 from tsadlib.utils.files import write_to_csv
 from tsadlib.utils.gpu import empty_gpu_cache
@@ -85,8 +85,16 @@ if __name__ == '__main__':
                         help="Dropout rate for regularization.")
     parser.add_argument('--dimension_fcl', type=int, default=16,
                         help="Feed-forward layer dimension.")
+    parser.add_argument('--temporal_dimension_fcl', type=int, default=16,
+                        help="temporal transformer fcl layer dimension.")
+    parser.add_argument('--spatio_dimension_fcl', type=int, default=16,
+                        help="spatio transformer fcl layer dimension.")
     parser.add_argument('--encoder_layers', type=int, default=1,
                         help="Number of encoder layers.")
+    parser.add_argument('--temporal_encoder_layers', type=int, default=1,
+                        help="Number of temporal encoder layers.")
+    parser.add_argument('--spatio_encoder_layers', type=int, default=1,
+                        help="Number of spatio encoder layers.")
     parser.add_argument('--top_k', type=int, default=3,
                         help="Top k time-frequency combinations (TimesNet).")
     parser.add_argument('--num_kernels', type=int, default=6,
@@ -157,21 +165,21 @@ if __name__ == '__main__':
         setting = f'{args.task_name}_{args.model}_{args.dataset}_iter{run + 1}'
         exp = ExperimentClass(args)
         if args.mode == 'train':
-            logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} start training: >>>>>>>>>>>>>>>>>>>>>>>>>>')
+            log.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} start training: >>>>>>>>>>>>>>>>>>>>>>>>>>')
             start_time = time.time()
             exp.train(setting)
-            logger.info(f'Training costs time: {time.time() - start_time:10.2}s.')
-            logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
+            log.info(f'Training costs time: {time.time() - start_time:10.2}s.')
+            log.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
             start_time = time.time()
             result = exp.test(setting)
             metrics.append(result)
-            logger.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
+            log.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
         else:
-            logger.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
+            log.info(f'\n>>>>>>>{run + 1:>3}/{args.runs:>3} testing: >>>>>>>>>>>>>>>>>>>>>>>>>>')
             start_time = time.time()
             result = exp.test(setting)
             metrics.append(result)
-            logger.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
+            log.info(f'Testing costs time: {time.time() - start_time:10.2}s.')
 
 
         empty_gpu_cache()
@@ -179,10 +187,10 @@ if __name__ == '__main__':
 
 
     df = pd.DataFrame(metrics)
-    logger.info(
+    log.info(
         f'\n----------------------{args.model} Evaluation Results in {args.dataset} Dataset-----------------------')
-    logger.success('All running result:\n{:s}', df.to_string())
-    logger.success('Average running result:\n{:s}', df.mean().round(4).to_string())
+    log.success('All running result:\n{:s}', df.to_string())
+    log.success('Average running result:\n{:s}', df.mean().round(4).to_string())
     result_path = os.path.join('results', args.model, f'{args.dataset}.csv')
     write_to_csv(result_path,
                  f'-----------------------{args.model} Evaluation Results in {args.dataset} Dataset at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}-----------------------')

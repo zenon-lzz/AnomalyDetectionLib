@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
-from tsadlib import logger
-from tsadlib.configs.constants import PROJECT_ROOT
+from tsadlib import log
+from tsadlib.configs.constants import LIBRARY_ROOT
 from tsadlib.preprocess import MBADataset, NABDataset, MSDSDataset, MSLSMAPDataset, SMDDataset, WADIDataset, UCRDataset, \
     SWaTDataset
 
@@ -22,7 +22,7 @@ class Dataset_Preprocess(unittest.TestCase):
         mba.preprocess()
         mba.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'MBA.pdf'))
@@ -31,7 +31,7 @@ class Dataset_Preprocess(unittest.TestCase):
             pdf.savefig(fig)
         plt.close()
         pdf.close()
-        logger.info(f'MBA\'s statistics:\n{pd.DataFrame([mba.get_statistics()]).to_string(index=False)}')
+        log.info(f'MBA\'s statistics:\n{pd.DataFrame([mba.get_statistics()]).to_string(index=False)}')
 
     # Test methods must begin with test_
     def test_msds_preprocess(self):
@@ -41,7 +41,7 @@ class Dataset_Preprocess(unittest.TestCase):
         msds.preprocess()
         msds.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'MSDS.pdf'))
@@ -51,7 +51,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'MSDS\'s statistics:\n{pd.DataFrame([msds.get_statistics()]).to_string(index=False)}')
+        log.info(f'MSDS\'s statistics:\n{pd.DataFrame([msds.get_statistics()]).to_string(index=False)}')
 
     # Test methods must begin with test_
     def test_nab_preprocess(self):
@@ -61,7 +61,7 @@ class Dataset_Preprocess(unittest.TestCase):
         nab.preprocess()
         nab.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'NAB.pdf'))
@@ -71,7 +71,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'NAB\'s statistics:\n{pd.DataFrame(nab.get_statistics()).to_string(index=False)}')
+        log.info(f'NAB\'s statistics:\n{pd.DataFrame(nab.get_statistics()).to_string(index=False)}')
 
     def test_msl_smap_preprocess(self):
         # Test MSL dataset
@@ -84,7 +84,7 @@ class Dataset_Preprocess(unittest.TestCase):
         msl.preprocess()
         msl.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'MSL.pdf'))
@@ -94,7 +94,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'MSL\'s statistics:\n{pd.DataFrame(msl.get_statistics()).to_string(index=False)}')
+        log.info(f'MSL\'s statistics:\n{pd.DataFrame(msl.get_statistics()).to_string(index=False)}')
 
         # Test SMAP dataset
         smap = MSLSMAPDataset(
@@ -113,7 +113,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'SMAP\'s statistics:\n{pd.DataFrame(smap.get_statistics()).to_string(index=False)}')
+        log.info(f'SMAP\'s statistics:\n{pd.DataFrame(smap.get_statistics()).to_string(index=False)}')
 
     def test_smd_preprocess(self):
         smd = SMDDataset(f'{DATASET_ROOT}/raw/SMD',
@@ -122,7 +122,7 @@ class Dataset_Preprocess(unittest.TestCase):
         smd.preprocess()
         smd.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'SMD.pdf'))
@@ -132,7 +132,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'SMD\'s statistics:\n{pd.DataFrame(smd.get_statistics()).to_string(index=False)}')
+        log.info(f'SMD\'s statistics:\n{pd.DataFrame(smd.get_statistics()).to_string(index=False)}')
 
     def test_wadi_preprocess(self):
         wadi = WADIDataset(f'{DATASET_ROOT}/raw/WADI',
@@ -141,7 +141,7 @@ class Dataset_Preprocess(unittest.TestCase):
         wadi.preprocess()
         wadi.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'WADI.pdf'))
@@ -151,7 +151,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'WADI\'s statistics:\n{pd.DataFrame([wadi.get_statistics()]).to_string(index=False)}')
+        log.info(f'WADI\'s statistics:\n{pd.DataFrame([wadi.get_statistics()]).to_string(index=False)}')
 
     def test_ucr_preprocess(self):
         ucr = UCRDataset(f'{DATASET_ROOT}/raw/UCR',
@@ -160,7 +160,7 @@ class Dataset_Preprocess(unittest.TestCase):
         ucr.preprocess()
         ucr.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'UCR.pdf'))
@@ -170,7 +170,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'UCR\'s statistics:\n{pd.DataFrame(ucr.get_statistics()).to_string(index=False)}')
+        log.info(f'UCR\'s statistics:\n{pd.DataFrame(ucr.get_statistics()).to_string(index=False)}')
 
     def test_swat_preprocess(self):
         swat = SWaTDataset(f'{DATASET_ROOT}/raw/SWaT',
@@ -179,7 +179,7 @@ class Dataset_Preprocess(unittest.TestCase):
         swat.preprocess()
         swat.save()
 
-        path = os.path.join(PROJECT_ROOT, 'Results/Plots')
+        path = os.path.join(LIBRARY_ROOT, 'Results/Plots')
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         pdf = PdfPages(os.path.join(path, 'SWaT.pdf'))
@@ -189,7 +189,7 @@ class Dataset_Preprocess(unittest.TestCase):
         plt.close()
         pdf.close()
 
-        logger.info(f'SWaT\'s statistics:\n{pd.DataFrame([swat.get_statistics()]).to_string(index=False)}')
+        log.info(f'SWaT\'s statistics:\n{pd.DataFrame([swat.get_statistics()]).to_string(index=False)}')
 
 
 if __name__ == '__main__':
