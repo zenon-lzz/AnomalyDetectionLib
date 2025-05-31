@@ -13,7 +13,7 @@ setup(
     author='Zenon Liu',
     author_email='2549562253@qq.com',
     description='A unified benchmark for anomaly detection models',
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 3 - Alpha',
