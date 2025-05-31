@@ -16,6 +16,9 @@ from tsadlib.configs.constants import LIBRARY_ROOT
 if TYPE_CHECKING:
     from loguru import Logger as _LoggerType
 
+# Keep _loguru_logger_instance as the actual Loguru instance we are configuring
+# This avoids confusion with LoggerSetup._logger_instance which is our flag
+
 _global_logger_config: Dict[str, Any] = {
     "log_dir_base": None,  # Default to LIBRARY_ROOT/logs
     "log_level": "INFO",
@@ -26,16 +29,16 @@ _global_logger_config: Dict[str, Any] = {
 class LoggerSetup:
     """
     A class to set up and manage a Loguru logger instance.
-    Ensures that the logger is configured only once and shared.
-    Configuration can be set globally before the first logger access.
+    Ensures that the logger is configured only once unless reconfigured explicitly.
     """
-    _logger_instance: Optional['_LoggerType'] = None
+    _is_configured: bool = False  # Flag to check if initial configuration has happened
 
-    @staticmethod  # Changed to staticmethod as it operates on class-level instance
+    @staticmethod
     def _setup_logger_instance(log_dir_base: Optional[str], log_level: str, comment: str = ''):
         """
         Configures the Loguru logger with console and file sinks.
         This method actually creates and configures the logger handlers.
+        It will remove existing handlers before adding new ones.
         """
         current_time = datetime.now()
         if log_dir_base is None:
@@ -48,7 +51,9 @@ class LoggerSetup:
         log_file_name = f"{current_time:%H-%M-%S}{comment}.log"
         log_file = os.path.join(log_dir, log_file_name)
 
-        _loguru_logger_instance.remove()  # Clear any existing default handlers
+        # Remove all previously added handlers from the global loguru logger instance
+        # This is crucial for reconfiguration to work cleanly.
+        _loguru_logger_instance.remove()
 
         _loguru_logger_instance.add(
             sink=lambda msg: print(msg, end=""),
@@ -63,44 +68,40 @@ class LoggerSetup:
             encoding="utf-8",
             format='{time:YYYY-MM-DD HH:mm:ss.SSS} | {name}:{function}:{line} | <level>{level}</level>: <level>{message}</level>'
         )
-        LoggerSetup._logger_instance = _loguru_logger_instance
+        LoggerSetup._is_configured = True
 
-    @staticmethod  # Changed to staticmethod
+    @staticmethod
     def get_logger() -> '_LoggerType':
         """
         Returns the configured logger instance.
         If not already configured, it uses the global configuration or defaults.
         """
-        if LoggerSetup._logger_instance is None:
+        if not LoggerSetup._is_configured:
+            # If not configured, setup with current global_logger_config
             config = _global_logger_config
             LoggerSetup._setup_logger_instance(
                 log_dir_base=config["log_dir_base"],
                 log_level=config["log_level"],
                 comment=config["comment"]
             )
-        return LoggerSetup._logger_instance  # type: ignore[return-value]
+        return _loguru_logger_instance  # Always return the globally managed instance
 
 
-def configure_global_logger(log_dir_base: Optional[str] = None, log_level: Optional[str] = None,
-                            comment: Optional[str] = None) -> '_LoggerType':
+def configure_global_logger(
+        log_dir_base: Optional[str] = None,
+        log_level: Optional[str] = None,
+        comment: Optional[str] = None
+) -> '_LoggerType':
     """
-    Sets the global configuration for the logger. 
-    This function should be called BEFORE the first call to `get_logger` or before importing `logger` 
-    if you want to override the default settings.
+    Sets the global configuration and re-configures the logger.
+    This function can be called at any time to change logger settings.
 
     Args:
-        log_dir_base (Optional[str]): Base directory for logs. Defaults to LIBRARY_ROOT/logs.
-        log_level (Optional[str]): Minimum log level. Defaults to 'INFO'.
-        comment (Optional[str]): Suffix for the log file name. Defaults to ''.
+        log_dir_base (Optional[str]): Base directory for logs. Defaults to LIBRARY_ROOT/logs if None.
+        log_level (Optional[str]): Minimum log level. Defaults to 'INFO' if None.
+        comment (Optional[str]): Suffix for the log file name. Defaults to '' if None.
     """
-    if LoggerSetup._logger_instance is not None:
-        # Optionally, log a warning or raise an error if logger is already initialized
-        _loguru_logger_instance.warning(
-            "Logger already initialized. Configuration changes might not apply to existing handlers or may re-initialize.")
-        # To be safe, let's re-initialize if called after first use, though this might have side effects
-        # For a stricter approach, one might raise an error here.
-        LoggerSetup._logger_instance = None  # Force re-initialization on next get_logger call
-
+    # Update global config dictionary with provided values if they are not None
     if log_dir_base is not None:
         _global_logger_config["log_dir_base"] = log_dir_base
     if log_level is not None:
@@ -108,25 +109,40 @@ def configure_global_logger(log_dir_base: Optional[str] = None, log_level: Optio
     if comment is not None:
         _global_logger_config["comment"] = comment
 
-    return LoggerSetup.get_logger()
+    # Apply the new configuration (or existing if no new values were passed for some items)
+    # This will remove old handlers and add new ones.
+    LoggerSetup._setup_logger_instance(
+        log_dir_base=_global_logger_config["log_dir_base"],
+        log_level=_global_logger_config["log_level"],
+        comment=_global_logger_config["comment"]
+    )
+    return _loguru_logger_instance
 
 
-# Export the logger instance directly. It will be configured on first use.
+# Export the logger instance directly. 
+# It will be configured with defaults when get_logger() is first called (i.e., upon module import).
+# Subsequent calls to configure_global_logger() will then re-configure it.
 log: '_LoggerType' = LoggerSetup.get_logger()
 
 if __name__ == '__main__':
-    # Default logger usage
-    log.info("This is an info message using default config.")
+    # log is already initialized with default settings due to the line above
+    log.info(f"Initial log (default settings). Log file will be in default location.")
 
-    # Simulate another module configuring the logger before use
-    # In a real scenario, this would be in a different file, called before `logger` is first used.
-    print("\nConfiguring logger with custom settings...")
-    log = configure_global_logger(log_level="DEBUG", comment="_custom_run")
+    print("\nReconfiguring logger with custom settings...")
+    # This call will now properly reconfigure the logger by removing old handlers
+    # and adding new ones based on the updated _global_logger_config.
+    custom_log = configure_global_logger(log_dir_base=os.path.join(LIBRARY_ROOT, "custom_logs"), log_level="DEBUG",
+                                         comment="_custom_run")
 
-    log.debug(
+    custom_log.debug(
         "This is a debug message using custom config. Log file will be in custom_logs and have _custom_run suffix.")
-    log.info("Info message from custom_logger.")
+    custom_log.info("Info message from custom_logger.")
 
-    # If another module just imports `logger` after configuration:
-    # from tsadlib.configs.log_config import logger as another_logger
-    # another_logger.info("This message should use the custom config if configure_global_logger was called before this import.")
+    # If another module just imports `log` from this module AFTER configure_global_logger has been called,
+    # it will get the reconfigured logger instance.
+    # For example:
+    # from tsadlib.configs.log_config import log as another_logger_instance
+    # another_logger_instance.info("This message uses the reconfigured settings.")
+
+    # To demonstrate that the original 'log' variable also reflects the change:
+    log.error("This error message from the original 'log' variable also uses the new custom config.")

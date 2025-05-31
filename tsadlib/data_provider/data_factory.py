@@ -69,7 +69,7 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
     root_path = os.path.join(args.dataset_root_path, args.dataset)
 
     # Create test dataset and dataloader
-    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_step,
+    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_size,
                                  mode='test')
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=args.num_workers)
 
