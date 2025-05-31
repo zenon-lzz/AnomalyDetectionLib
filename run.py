@@ -52,6 +52,8 @@ if __name__ == '__main__':
                         help="Batch size for training/testing.")
     parser.add_argument('--window_size', type=int, default=100,
                         help="Sequence/window length for time series.")
+    parser.add_argument('--window_step', type=int, default=100,
+                        help="Sliding window step.")
 
     # =========================
     # Model Architecture Parameters

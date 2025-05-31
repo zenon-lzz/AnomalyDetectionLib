@@ -69,12 +69,12 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
     root_path = os.path.join(args.dataset_root_path, args.dataset)
 
     # Create test dataset and dataloader
-    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_size,
+    test_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_step,
                                  mode='test')
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=args.num_workers)
 
     # Create training dataset
-    train_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_size,
+    train_dataset = dataset_class(root_path=root_path, win_size=args.window_size, step=args.window_step,
                                   mode='train')
     train_length = len(train_dataset)
 
@@ -101,7 +101,7 @@ def data_provider(args: ConfigType, split_way: DatasetSplitEnum = DatasetSplitEn
         validate_subset = Subset(train_dataset, indices[validate_start_index:])
 
         # Create data loaders for training and validation
-        train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+        train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=args.window_step)
         validate_dataloader = DataLoader(validate_subset, batch_size=batch_size, num_workers=args.num_workers)
 
         return train_dataloader, validate_dataloader, test_dataloader

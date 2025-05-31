@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from experiments.exp_basic import ExperimentBase
-from tsadlib import ConfigType, DatasetSplitEnum, ValidateMetricEnum, EarlyStoppingModeEnum, ThresholdWayEnum
+from tsadlib import ConfigType, DatasetSplitEnum, ValidateMetricEnum, EarlyStoppingModeEnum, ThresholdWayEnum, log
 from tsadlib.data_provider.data_factory import data_provider
 from tsadlib.metrics.anomaly_metrics import AnomalyMetrics
 from tsadlib.utils.traning_stoper import OneEarlyStopping
@@ -113,13 +113,13 @@ class BenchmarksExperiment(ExperimentBase):
             # Record training and validating losses
             self._record_epoch(epoch, train_avg_loss, f1_score)
 
-            logger.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate f1-score: {:>.7f}",
+            log.info("Epoch: {:>3} cost time: {:>10.4f}s, train loss: {:>.7f}, validate f1-score: {:>.7f}",
                         epoch + 1,
                         time.time() - epoch_time, train_avg_loss, f1_score)
 
             # Early stopping check
             if early_stopping(float(f1_score), model):
-                logger.warning("Early stopping triggered")
+                log.warning("Early stopping triggered")
                 break
 
     def validate(self, dataloader: DataLoader, train_loader=None,
@@ -183,11 +183,11 @@ class BenchmarksExperiment(ExperimentBase):
 
         file_path = os.path.join(args.checkpoints, f'{setting}.pth')
         if os.path.exists(file_path):
-            logger.info('Loading model weights.')
+            log.info('Loading model weights.')
             model.load_state_dict(torch.load(file_path, map_location=self.device))
         else:
             msg = f"Model weights file {setting}.pth not found in {args.checkpoints}"
-            logger.error(msg)
+            log.error(msg)
             raise FileNotFoundError(msg)
 
         # Set model to evaluation mode and initialize score containers
@@ -232,7 +232,7 @@ class BenchmarksExperiment(ExperimentBase):
         # Record evaluation metrics
         self._record_metrics(result)
 
-        logger.success('Result:\nPrecision: {:.2f}\nRecall: {:.2f}\nF1-score: {:.2f}',
+        log.success('Result:\nPrecision: {:.2f}\nRecall: {:.2f}\nF1-score: {:.2f}',
                        result.Precision,
                        result.Recall, result.F1_score)
 

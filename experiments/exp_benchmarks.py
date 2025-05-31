@@ -174,7 +174,7 @@ class BenchmarksExperiment(ExperimentBase):
             model.load_state_dict(torch.load(file_path, map_location=self.device))
         else:
             msg = f"Model weights file {setting}.pth not found in {self.checkpoints}"
-            logger.error(msg)
+            log.error(msg)
             raise FileNotFoundError(msg)
 
         # Set model to evaluation mode and initialize score containers

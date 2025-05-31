@@ -36,6 +36,7 @@ class ConfigType:
     dropout: float = field()  # Dropout rate for regularization
     batch_size: int = field()  # Batch size for training/testing
     window_size: int = field()  # Sequence/window length for time series
+    window_step: int = field()  # Sliding window step
 
     # Parameters that have default value
     task_name: str = field(default='benchmarks')
