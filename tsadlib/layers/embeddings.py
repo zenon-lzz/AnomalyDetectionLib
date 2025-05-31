@@ -39,7 +39,7 @@ class PositionalEmbedding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         # If d_model is odd, the number of columns for cosine will be one less than for sine
         if d_model % 2 != 0:
-            pe[:, 1::2] = torch.cos(position * div_term[:, :-1])
+            pe[:, 1::2] = torch.cos(position * div_term[:-1])
         else:
             pe[:, 1::2] = torch.cos(position * div_term)
 
