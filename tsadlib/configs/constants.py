@@ -7,7 +7,6 @@
 """
 import datetime
 import os
-import sys
 
 # =================================================
 # Global Constants
@@ -36,24 +35,3 @@ DATASET_OPTIONS = [
     'NIPS_TS_Swan',
     'NIPS_TS_CCard'
 ]
-
-# Check if currently in debug mode
-def is_debugging():
-    # Method 1: Check if debugger is attached
-    gettrace = getattr(sys, 'gettrace', None)
-    if gettrace is not None and gettrace():
-        return True
-
-    # Method 2: Check if running through IDE debugger like PyCharm
-    if any(x in sys.modules for x in ['pydevd', 'pdb']):
-        return True
-
-    # Method 3: Check command line arguments
-    if any(arg in sys.argv for arg in ['-m', 'pdb']):
-        return True
-
-    return False
-
-
-# Current running mode
-IS_DEBUG = is_debugging()

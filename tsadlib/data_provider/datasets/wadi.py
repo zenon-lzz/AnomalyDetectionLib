@@ -10,30 +10,19 @@
 import os
 
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 from .base import BaseDataset
+from ... import PreprocessScalerEnum, ConfigType
 
 
 class WADIDataset(BaseDataset):
     """Water Distribution Anomaly Detection dataset loader.
     
     Inherits from BaseDataset and implements WADI-specific data loading and preprocessing.
-    
-    Args:
-        root_path (str): Path to directory containing WADI dataset files
-        win_size (int): Sliding window size for time series segmentation  
-        step (int): Stride between windows (default: 1)
-        mode (str): 'train' or 'test' mode (default: 'train')
-    
-    Attributes:
-        scaler (StandardScaler): Scaler fitted on training data
-        train (np.ndarray): Normalized training data (mode='train')
-        test (np.ndarray): Normalized test data (mode='test')
-        test_labels (np.ndarray): Attack labels (1: attack, 0: normal)
+
     """
 
-    def __init__(self, root_path, win_size, step=1, mode="train"):
+    def __init__(self, root_path, args: ConfigType, mode, scaler: PreprocessScalerEnum):
         """Initialize dataset and load/preprocess data.
         
         Data Processing Pipeline:
@@ -42,7 +31,7 @@ class WADIDataset(BaseDataset):
         3. Handle missing values via interpolation
         4. Standardize data using training statistics
         """
-        super().__init__(win_size, step, mode)
+        super().__init__(args.window_size, args.window_stride, mode)
 
         # Load and clean training data
         train_data = pd.read_csv(os.path.join(root_path, 'WADI_14days.csv'))
@@ -56,7 +45,7 @@ class WADIDataset(BaseDataset):
         train_data = train_data.interpolate().bfill().to_numpy()
 
         # Standardize data using training statistics
-        self.scaler = StandardScaler()
+        self.set_scaler(scaler)
         self.scaler.fit(train_data)
         data = self.scaler.transform(train_data)
 

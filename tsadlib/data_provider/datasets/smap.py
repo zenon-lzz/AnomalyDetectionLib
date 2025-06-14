@@ -11,9 +11,9 @@
 import os
 
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 
 from .base import BaseDataset
+from ... import PreprocessScalerEnum, ConfigType
 
 
 class SMAPDataset(BaseDataset):
@@ -23,29 +23,20 @@ class SMAPDataset(BaseDataset):
     This dataset contains telemetry data from NASA's SMAP satellite mission.
     The class handles data loading, preprocessing, and windowing for time series analysis.
     It inherits window handling functionality from the BaseDataset class.
-    
-    Attributes:
-        scaler (StandardScaler): Scaler for data normalization
-        train (np.ndarray): Training data after normalization
-        test (np.ndarray): Test data after normalization
-        test_labels (np.ndarray): Anomaly labels for test data
+
     """
 
-    def __init__(self, root_path, win_size, step=1, mode="train"):
+    def __init__(self, root_path, args: ConfigType, mode, scaler: PreprocessScalerEnum):
         """
         Initialize the SMAP dataset.
         
-        Args:
-            root_path (str): Path to the dataset files
-            win_size (int): Size of the sliding window
-            step (int): Step size for the sliding window
-            mode (str): 'train' or 'test' mode
+
         """
         # Initialize the base class with window parameters
-        super().__init__(win_size, step, mode)
+        super().__init__(args.window_size, args.window_stride, mode)
         
         # Initialize and fit StandardScaler on training data
-        self.scaler = StandardScaler()
+        self.set_scaler(scaler)
         data = np.load(os.path.join(root_path, "SMAP_train.npy"))
         self.scaler.fit(data)
         data = self.scaler.transform(data)

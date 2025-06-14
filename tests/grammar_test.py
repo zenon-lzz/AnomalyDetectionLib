@@ -19,3 +19,4 @@ class GrammarLearning(unittest.TestCase):
         # 格式化输出
         formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
         print(f"当前日期时间: {formatted_date}")
+        print(list(range(10, 210, 10)))

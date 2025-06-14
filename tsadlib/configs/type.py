@@ -8,11 +8,9 @@
     model parameters, dataset information, and training settings.
 ==================================================
 """
-import multiprocessing
 from dataclasses import dataclass, field
 from enum import Enum
 
-from tsadlib.configs.constants import IS_DEBUG
 
 
 @dataclass
@@ -29,6 +27,8 @@ class ConfigType:
 
     model: str = field()  # Model name (e.g., 'TimesNet')
 
+    # data preprocessing parameters
+
     # Model Architecture Parameters
     d_model: int = field()  # Model dimension
     input_channels: int = field()  # Input channel dimension
@@ -36,7 +36,7 @@ class ConfigType:
     dropout: float = field()  # Dropout rate for regularization
     batch_size: int = field()  # Batch size for training/testing
     window_size: int = field()  # Sequence/window length for time series
-    window_step: int = field()  # Sliding window step
+    window_stride: int = field()  # Sliding window stride
 
     # Parameters that have default value
     task_name: str = field(default='benchmarks')
@@ -77,10 +77,6 @@ class ConfigType:
     warmup_epoch: int = field(default=0)
     anomaly_ratio: float = field(default=1)  # Expected ratio of anomalies in data
 
-    # Autoconfigure DataLoader's num_workers based on debug status and system
-    num_workers: int = field(
-        default=0 if IS_DEBUG else min(10, multiprocessing.cpu_count())
-    )  # 0 in debug mode, otherwise use CPU count with max of 10
     use_tensorboard: bool = field(default=False)
     use_wandb: bool = field(default=False)
 
@@ -126,3 +122,8 @@ class ValidateMetricEnum(Enum):
 class ThresholdWayEnum(Enum):
     BEST_F1 = 'best_f1'
     PERCENTILE = 'percentile'
+
+
+class PreprocessScalerEnum(Enum):
+    STANDARD = 'standard'
+    MINMAX = 'min-max'

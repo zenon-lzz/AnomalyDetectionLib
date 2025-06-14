@@ -22,6 +22,7 @@ __all__ = [
     'EarlyStoppingModeEnum',
     'ValidateMetricEnum',
     'ThresholdWayEnum',
+    'PreprocessScalerEnum',
     'data_provider',
     'OneEarlyStopping',
     'TwoEarlyStopping',

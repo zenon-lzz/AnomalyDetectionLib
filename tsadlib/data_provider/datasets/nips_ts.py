@@ -15,27 +15,12 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from .base import BaseDataset
+from ... import ConfigType, PreprocessScalerEnum
 
 
 class NIPSTSWaterDataset(BaseDataset):
-    """Water treatment plant sensor data loader for anomaly detection.
-    
-    Inherits from BaseDataset and implements water-specific data loading.
-    
-    Args:
-        root_path (str): Path to directory containing dataset files
-        win_size (int): Sliding window size for time series segmentation
-        step (int): Stride between windows (default: 1)
-        mode (str): 'train' or 'test' mode (default: 'train')
-        
-    Attributes:
-        scaler (StandardScaler): Scaler fitted on training data
-        train (np.ndarray): Normalized training data
-        test (np.ndarray): Normalized test data (mode='test')
-        test_labels (np.ndarray): Anomaly labels (mode='test')
-    """
 
-    def __init__(self, root_path, win_size, step=1, mode='train'):
+    def __init__(self, root_path, args: ConfigType, mode, scaler: PreprocessScalerEnum):
         """Initialize dataset and load/preprocess data.
         
         Processing Pipeline:
@@ -43,9 +28,9 @@ class NIPSTSWaterDataset(BaseDataset):
         2. Fit scaler on training data
         3. Apply standardization
         """
-        super().__init__(win_size, step, mode)
+        super().__init__(args.window_size, args.window_stride, mode)
 
-        self.scaler = StandardScaler()
+        self.set_scaler(scaler)
         data = np.load(os.path.join(root_path, 'NIPS_TS_Water_train.npy'))
         self.scaler.fit(data)
         data = self.scaler.transform(data)
@@ -65,9 +50,9 @@ class NIPSTSSwanDataset(BaseDataset):
     Dataset-specific implementation for Swan benchmark data.
     """
 
-    def __init__(self, root_path, win_size, step=1, mode='train'):
+    def __init__(self, root_path, win_size, stride=1, mode='train'):
 
-        super().__init__(win_size, step, mode)
+        super().__init__(win_size, stride, mode)
 
         self.scaler = StandardScaler()
         data = np.load(os.path.join(root_path, 'NIPS_TS_Swan_train.npy'))
@@ -92,9 +77,9 @@ class NIPSTSCreditcardDataset(BaseDataset):
     Dataset-specific implementation for Creditcard benchmark data.
     """
 
-    def __init__(self, root_path, win_size, step=1, mode='train'):
+    def __init__(self, root_path, win_size, stride=1, mode='train'):
 
-        super().__init__(win_size, step, mode)
+        super().__init__(win_size, stride, mode)
 
         self.scaler = StandardScaler()
         data = np.load(os.path.join(root_path, 'NIPS_TS_Creditcard_train.npy'))

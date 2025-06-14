@@ -1,1 +1,1 @@
-python run.py --task_name benchmarks --model MtsCID --mode train --dataset NIPS_TS_Swan --dataset_root_path /home/lzz/Desktop/datasets/ad --batch_size 64 --d_model 38 --input_channels 38 --output_channels 38 --hyper_parameter_lambda 1 --anomaly_ratio 0.9 --gpu 1
+python run.py --task_name benchmarks --model MtsCID --mode train --dataset NIPS_TS_Creditcard --dataset_root_path /home/lzz/Desktop/datasets/ad --batch_size 64 --d_model 38 --input_channels 38 --output_channels 38 --hyper_parameter_lambda 1 --anomaly_ratio 0.9 --gpu 1
